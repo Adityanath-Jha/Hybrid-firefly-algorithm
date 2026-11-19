@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EO-CC-HFA · Firefly Swarm Search and Rescue</title>
+<meta name="description" content="Interactive documentation of FA_final.py: an energy-aware, communication-constrained hybrid Firefly Algorithm for UAV swarm search and rescue.">
+<style>
+:root{--bg:#f6f8fa;--panel:#fff;--ink:#0f1b2a;--mute:#5b6b7c;--line:#d8e0e8;--teal:#0e7c86;--teal2:#0a5f67;--navy:#1d3557;--amber:#d97706;--red:#c0392b;--green:#16a34a;--blue:#2563eb;--code:#f1f4f8;--shadow:0 1px 2px rgba(15,27,42,.06),0 6px 20px rgba(15,27,42,.06)}
+:root[data-theme=dark]{--bg:#0d141c;--panel:#141e29;--ink:#e6edf4;--mute:#93a4b6;--line:#26364a;--teal:#38b2bd;--teal2:#6fd0d8;--navy:#8fb4e8;--amber:#f2a33a;--red:#ef6b5a;--green:#4ade80;--blue:#6ea0ff;--code:#0f1822;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0d141c;--panel:#141e29;--ink:#e6edf4;--mute:#93a4b6;--line:#26364a;--teal:#38b2bd;--teal2:#6fd0d8;--navy:#8fb4e8;--amber:#f2a33a;--red:#ef6b5a;--green:#4ade80;--blue:#6ea0ff;--code:#0f1822;--shadow:0 1px 2px rgba(0,0,0,.4),0 6px 20px rgba(0,0,0,.35)}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:70px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--teal)}code,pre,.mono{font-family:ui-monospace,"Cascadia Code",Consolas,Menlo,monospace}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;gap:6px;height:54px;overflow-x:auto}
+nav b{margin-right:14px;white-space:nowrap;color:var(--navy)}nav a{padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--mute);font-size:14px;white-space:nowrap}nav a:hover{background:var(--bg);color:var(--ink)}
+nav button{margin-left:auto}
+button,select,input[type=number]{font:inherit;font-size:14px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px}button:hover{border-color:var(--teal)}
+button.primary{background:var(--teal);color:#fff;border-color:var(--teal)}button.primary:hover{background:var(--teal2)}
+header.hero{padding:56px 0 34px}
+.eyebrow{color:var(--teal);font-weight:600;letter-spacing:.08em;font-size:13px;text-transform:uppercase}
+h1{font-size:clamp(30px,5vw,50px);line-height:1.1;margin:.2em 0 .3em;color:var(--navy)}
+.lead{font-size:19px;color:var(--mute);max-width:760px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:28px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}.stat b{display:block;font-size:30px;color:var(--teal);line-height:1.1}.stat span{color:var(--mute);font-size:14px}
+section{padding:46px 0;border-top:1px solid var(--line)}
+h2{font-size:28px;margin:0 0 6px;color:var(--navy)}h3{margin:1.4em 0 .4em;font-size:19px}
+p.sub{color:var(--mute);margin:0 0 22px;max-width:780px}
+.grid{display:grid;gap:14px}.g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+.card h4{margin:0 0 4px;font-size:16px}.card p{margin:.2em 0;color:var(--mute);font-size:15px}
+.step{display:flex;gap:12px}.step .n{flex:none;width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px}
+.tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;background:var(--code);border:1px solid var(--line);color:var(--mute);margin-right:4px}
+/* simulator */
+.sim{display:grid;grid-template-columns:minmax(0,640px) minmax(280px,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.sim{grid-template-columns:1fr}}
+#cv{width:100%;aspect-ratio:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:block;cursor:crosshair}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:14px}.ctl label{display:flex;flex-direction:column;gap:2px;color:var(--mute)}
+.ctl input[type=number],.ctl select{width:100%;padding:5px 8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px}
+.ctl .full{grid-column:1/-1}.chk{flex-direction:row!important;align-items:center;gap:6px!important}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13px;font-weight:600;background:var(--code);border:1px solid var(--line)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.kpis div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center}.kpis b{display:block;font-size:20px}.kpis span{font-size:12px;color:var(--mute)}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}th{color:var(--mute);font-weight:600;background:var(--bg)}
+.scroll{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.log{font-size:13px;max-height:150px;overflow:auto;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.lg{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;color:var(--mute);margin:8px 0}.lg i{display:inline-block;width:11px;height:11px;margin-right:4px;vertical-align:-1px}
+/* formula lab */
+.lab canvas{width:100%;height:230px;background:var(--bg);border:1px solid var(--line);border-radius:8px}
+.lab input[type=range]{width:100%}.lab .rl{display:flex;justify-content:space-between;font-size:14px;color:var(--mute)}.lab .out{font-size:15px;background:var(--code);border-radius:8px;padding:8px 10px;margin-top:8px}
+.eq{font-family:"Cambria Math","STIX Two Math",Georgia,serif;font-size:17px;background:var(--code);border-radius:8px;padding:8px 12px;margin:8px 0;overflow-x:auto;white-space:nowrap}
+/* code */
+.codebox{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px}@media(max-width:900px){.codebox{grid-template-columns:1fr}}
+.clist{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.clist button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:9px 12px;background:transparent}.clist button small{color:var(--mute);display:block}.clist button.on{background:color-mix(in srgb,var(--teal) 14%,var(--panel));border-left:3px solid var(--teal)}
+.cview{border:1px solid var(--line);border-radius:12px;background:var(--code);overflow:hidden}
+.cnote{padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);font-size:15px}
+pre#src{margin:0;max-height:520px;overflow:auto;font-size:13px;line-height:1.5;padding:8px 0}
+pre#src div{display:flex;padding:0 12px 0 0;white-space:pre}pre#src div.hl{background:color-mix(in srgb,var(--amber) 20%,transparent)}
+pre#src .ln{flex:none;width:48px;text-align:right;padding-right:12px;color:var(--mute);user-select:none}
+.k{color:#a23b9a}.s{color:#1a7f37}.c{color:#7a8794;font-style:italic}.nm{color:#b35900}.df{color:#0b63c5}
+:root[data-theme=dark] .k{color:#d79be0}:root[data-theme=dark] .s{color:#7ee2a0}:root[data-theme=dark] .nm{color:#f2a33a}:root[data-theme=dark] .df{color:#8fb4ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .k{color:#d79be0}:root:not([data-theme=light]) .s{color:#7ee2a0}:root:not([data-theme=light]) .nm{color:#f2a33a}:root:not([data-theme=light]) .df{color:#8fb4ff}}
+.chart canvas{width:100%;height:260px}
+footer{padding:30px 0 50px;color:var(--mute);font-size:14px;border-top:1px solid var(--line)}
+.note{font-size:14px;color:var(--mute)}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><b>EO-CC-HFA</b><a href="#overview">Overview</a><a href="#sim">Simulator</a><a href="#algo">Algorithm</a><a href="#lab">Formula lab</a><a href="#code">Code explorer</a><a href="#params">Parameters</a><a href="#results">Results</a><a href="#run">Run it</a><button id="theme" title="Toggle light/dark">Theme</button></div></nav>
+
+<header class="hero"><div class="wrap">
+<div class="eyebrow">Computational Thinking · Group 15 · Amrita Vishwa Vidyapeetham</div>
+<h1>Energy-aware, communication-constrained Firefly swarm for search and rescue</h1>
+<p class="lead">An interactive guide to <code>FA_final.py</code>. A UAV swarm finds static and drifting survivors in an arena with moving hazards, a limited radio range and limited batteries, with no central controller. Every part of the page below runs the same algorithm as the Python program.</p>
+<div class="stats">
+<div class="stat"><b>100 / 100</b><span>default missions completed (16 drones, 8 survivors)</span></div>
+<div class="stat"><b>89.7</b><span>mean generation of the last mark (± 6.3)</span></div>
+<div class="stat"><b>1,600 / 1,600</b><span>random configurations completed</span></div>
+<div class="stat"><b>0</b><span>drones lost with the battery relay (400-generation missions)</span></div>
+</div></div></header>
+
+<section id="overview"><div class="wrap">
+<h2>How one generation works</h2>
+<p class="sub">Each call of <code>step()</code> moves the world forward once. The order matters, because every stage uses the result of the one before it.</p>
+<div class="grid g3">
+<div class="card step"><div class="n">1</div><div><h4>Move the world</h4><p>Survivors drift or stand; hazards grow, move and slide around the base and standing survivors.</p></div></div>
+<div class="card step"><div class="n">2</div><div><h4>Pick the phase and radio range</h4><p>Static survivors first; drifters from generation 60. Radio range may drop to 40 %. γ = ln 2 / R<sub>c</sub>².</p></div></div>
+<div class="card step"><div class="n">3</div><div><h4>Assign one target per drone</h4><p>Each drone knows what it or a radio mate senses. Greedy nearest pairing in rounds, up to a quota of 3 guards.</p></div></div>
+<div class="card step"><div class="n">4</div><div><h4>Battery relay</h4><p>Low drones return, docked ones recharge, standby drones relaunch to keep the fleet at strength.</p></div></div>
+<div class="card step"><div class="n">5</div><div><h4>Compute brightness</h4><p>I = 100/(1+d<sub>target</sub>) − 0.075·d<sub>base</sub> − 500·[in hazard].</p></div></div>
+<div class="card step"><div class="n">6</div><div><h4>Build and take the move</h4><p>Firefly pull + separation + pursuit (or exploration) + jitter, then a hazard-safe step limited to 0.45.</p></div></div>
+<div class="card step"><div class="n">7</div><div><h4>Mark survivors</h4><p>A standing survivor with an active drone within 0.55 is marked. When all are marked, the swarm returns to base.</p></div></div>
+<div class="card"><h4>Design principles</h4><p>One drone, one target · local knowledge only · forces add up and are capped · safety is a hard rule · energy is first class.</p></div>
+</div></div></section>
+
+<section id="sim"><div class="wrap">
+<h2>Live simulator</h2>
+<p class="sub">A faithful JavaScript port of the Python engine, including Python's random number generator. With the same settings and seed it produces the same mission as <code>FA_final.py</code> (verified against the Python program on 67 configurations). Click a drone to inspect it, or click a drifting survivor to stop or resume it. Smooth motion is interpolated between generations.</p>
+<div class="sim">
+<div><canvas id="cv" width="760" height="760" style="background:#080d17"></canvas>
+<div class="lg"><span><i style="background:#00F0FF;border-radius:50%"></i>active drone (ring = battery)</span><span><i style="background:#8a96a3;border-radius:50%"></i>standby / parked</span><span><i style="background:#d97706;border-radius:50%"></i>returning</span><span><i style="background:#6b7785"></i>static survivor</span><span><i style="background:#d97706;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>drifting survivor</span><span><i style="background:#16a34a"></i>marked</span><span><i style="background:rgba(220,38,38,.25);border:1px dashed #dc2626;border-radius:50%"></i>hazard</span></div></div>
+<div>
+<div class="card">
+<div class="row"><button class="primary" id="bPlay">Pause</button><button id="bStep">Step</button><button id="bReset">Reset</button><button id="bFreeze">Freeze drifters</button></div>
+<div class="ctl">
+<label>Drones<input type="number" id="nDr" value="16" min="2" max="40"></label>
+<label>Survivors<input type="number" id="nSv" value="8" min="1" max="25"></label>
+<label>Drifting<input type="number" id="nDy" value="4" min="0" max="25"></label>
+<label><span>Radio range R<sub>c</sub></span><input type="number" id="cm" value="4" min="1" max="12" step="0.5"></label>
+<label>Battery<select id="bt"><option value="250">Standard (250), 50 % relay</option><option value="120">Critical (120), 50 % relay</option><option value="0">Unlimited</option></select></label>
+<label>Seed<span style="display:flex;gap:4px"><input type="number" id="sd" value="7"><button id="bSeed" title="New random seed">↻</button></span></label>
+<label class="chk"><input type="checkbox" id="fz" checked>Fixed hazard</label><label class="chk"><input type="checkbox" id="mz" checked>Moving hazard</label>
+<label class="chk"><input type="checkbox" id="nz">Late hazard (gen 50)</label><label class="chk"><input type="checkbox" id="cd">Radio drop (gen 60)</label>
+<label class="full">Speed: <span id="spv">12</span> generations per second<input type="range" id="sp" min="1" max="60" value="12"></label>
+<label class="chk full"><input type="checkbox" id="rg" checked>Show radio links and ranges</label>
+</div></div>
+<div class="kpis"><div><b id="kG">0</b><span>generation</span></div><div><b id="kM">0/8</b><span>marked</span></div><div><b id="kA">8</b><span>active</span></div><div><b id="kS">0</b><span>relay launches</span></div></div>
+<div class="card"><span class="pill" id="phase">Phase 1</span> <span class="pill mono" id="fps">60 FPS</span> <span class="note" id="rcnow"></span>
+<div id="insp" class="note" style="margin-top:8px">Click a drone on the map to see its brightness, target, battery and the attraction it feels.</div></div>
+</div></div>
+<div class="grid g2" style="margin-top:16px">
+<div class="card chart"><h4>Share of survivors marked</h4><canvas id="prog"></canvas></div>
+<div class="card"><h4>Event log</h4><div class="log mono" id="log"></div></div>
+</div>
+<div class="grid g2" style="margin-top:16px">
+<div class="card"><h4>Survivors</h4><div class="scroll"><table id="tSv"></table></div></div>
+<div class="card"><h4>Drones</h4><div class="scroll"><table id="tDr"></table></div></div>
+</div>
+</div></section>
+
+<section id="algo"><div class="wrap">
+<h2>The algorithm in detail</h2>
+<p class="sub">The mathematics behind each stage, with the lines of <code>FA_final.py</code> that implement it. The full derivations are in the report.</p>
+<div class="grid g2">
+<div class="card"><h4>Perception and communication <span class="tag">lines 255–261, 317–333</span></h4>
+<div class="eq">K<sub>i</sub> ∋ k ⇔ min<sub>j∈N<sub>i</sub></sub> ‖p<sub>j</sub> − s<sub>k</sub>‖ &lt; R<sub>s</sub></div>
+<p>Drone i knows survivor k if it, or any active drone within the radio range, is closer than the sensing range 4.0. This is the communication constraint: a drone with no radio mate near a survivor learns nothing and explores.</p></div>
+<div class="card"><h4>Target assignment <span class="tag">lines 257, 329–333</span></h4>
+<div class="eq">q = max(1, min(3, ⌊n<sub>act</sub> / n<sub>unm</sub>⌋))</div>
+<p>Greedy rounds: round r takes the closest free (drone, survivor) pair among survivors that already have r guards, until the quota q is reached. Leftover drones explore.</p></div>
+<div class="card"><h4>Firefly brightness <span class="tag">lines 267–273</span></h4>
+<div class="eq">I<sub>i</sub> = 100 / (1 + d<sub>iτ</sub>) − w<sub>e</sub>·0.15·d<sub>ib</sub> − 500·𝟙[p<sub>i</sub> ∈ Z]</div>
+<p>A proximity score, a small energy term and a heavy hazard penalty. Dead, non-active or escaping drones get −10<sup>9</sup> so that nobody follows them.</p></div>
+<div class="card"><h4>Attraction <span class="tag">lines 279–286</span></h4>
+<div class="eq">β<sub>ij</sub> = ½ β<sub>0</sub> e<sup>−γ r²</sup>,  γ = ln 2 / R<sub>c</sub>²,  ‖F<sub>i</sub>‖ ≤ 1.0</div>
+<p>Only brighter drones on the same target within R<sub>c</sub> attract. Because γ is tied to R<sub>c</sub>, the attraction at the edge of the radio range is always half of its value at zero distance.</p></div>
+<div class="card"><h4>Movement law <span class="tag">lines 287–307</span></h4>
+<div class="eq">v = F + S + G + J (with target) · v = S + C + W + J (explorer)</div>
+<p>F Firefly pull (capped 1.0), S separation (0.9 within 0.8), G pursuit (1.35 static, 1.05 moving), C cover push (1.6 within 2.2), W waypoint pull 0.75, J jitter α = 0.25. The sum is limited to the step Δ = 0.45.</p></div>
+<div class="card"><h4>Hazard-safe motion <span class="tag">lines 115–166</span></h4>
+<div class="eq">F<sup>rep</sup> = 3.6 · ((r<sub>d</sub> − d) / (r<sub>d</sub> − ρ))², r<sub>d</sub> = ρ + 0.28 + 1.35</div>
+<p>A potential field with a sideways swerve, a hard projection out of every hazard, a stuck nudge, and a stagnation escape that detects a drone going nowhere for 20 generations.</p></div>
+<div class="card"><h4>Energy and relay <span class="tag">lines 167–231</span></h4>
+<div class="eq">return when E &lt; 2·d<sub>base</sub> + 16 + 2·|Z|;  recharge +6 per generation</div>
+<p>Flying costs 1.5 per unit. A returning drone docks within 0.40 of the base, recharges, goes on standby, and relaunches towards the least-covered survivor.</p></div>
+<div class="card"><h4>Marking and phases <span class="tag">lines 258–261, 310–314</span></h4>
+<div class="eq">mark ⇔ ∃ active i: ‖p<sub>i</sub> − s<sub>k</sub>‖ &lt; 0.55 ∧ k standing</div>
+<p>Static survivors are served first. Drifters are tracked from generation 60 (or earlier when no standing survivor is left), and can only be marked once they stop. When every survivor is marked, the swarm flies home.</p></div>
+</div></div></section>
+
+<section id="lab"><div class="wrap lab">
+<h2>Formula lab</h2>
+<p class="sub">Move the sliders to see how each quantity of the algorithm behaves.</p>
+<div class="grid g2">
+<div class="card"><h4>Attractiveness β(r)</h4><canvas id="c1"></canvas>
+<div class="rl"><span>Radio range R<sub>c</sub></span><b id="v1"></b></div><input type="range" id="s1" min="1" max="10" step="0.5" value="4">
+<div class="out mono" id="o1"></div></div>
+<div class="card"><h4>Brightness of a drone</h4><canvas id="c2"></canvas>
+<div class="rl"><span>Distance to target</span><b id="v2"></b></div><input type="range" id="s2" min="0" max="12" step="0.1" value="3">
+<div class="rl"><span>Distance to base</span><b id="v2b"></b></div><input type="range" id="s2b" min="0" max="14.1" step="0.1" value="6">
+<label class="chk" style="display:flex;gap:6px"><input type="checkbox" id="h2">Drone is inside a hazard</label>
+<div class="out mono" id="o2"></div></div>
+<div class="card"><h4>Hazard repulsion</h4><canvas id="c3"></canvas>
+<div class="rl"><span>Hazard radius ρ</span><b id="v3"></b></div><input type="range" id="s3" min="0.8" max="1.4" step="0.05" value="1.1">
+<div class="rl"><span>Distance from the hazard centre</span><b id="v3b"></b></div><input type="range" id="s3b" min="0.5" max="4" step="0.05" value="2">
+<div class="out mono" id="o3"></div></div>
+<div class="card"><h4>When must a drone return?</h4><canvas id="c4"></canvas>
+<div class="rl"><span>Distance to base</span><b id="v4"></b></div><input type="range" id="s4" min="0" max="14.1" step="0.1" value="8">
+<div class="rl"><span>Battery</span><b id="v4b"></b></div><input type="range" id="s4b" min="0" max="250" step="1" value="60">
+<div class="rl"><span>Active hazards</span><b id="v4c"></b></div><input type="range" id="s4c" min="0" max="3" step="1" value="2">
+<div class="out mono" id="o4"></div></div>
+<div class="card"><h4>Guard quota</h4>
+<div class="rl"><span>Active drones</span><b id="v5"></b></div><input type="range" id="s5" min="1" max="24" value="8">
+<div class="rl"><span>Unmarked survivors</span><b id="v5b"></b></div><input type="range" id="s5b" min="1" max="25" value="3">
+<div class="out mono" id="o5"></div></div>
+<div class="card"><h4>The step limit</h4><p class="note">A drone with a target usually moves the full 0.45 per generation: the force sum decides the direction, the step limit decides the speed.</p>
+<div class="rl"><span>Force vector length</span><b id="v6"></b></div><input type="range" id="s6" min="0" max="3" step="0.05" value="1.4">
+<div class="out mono" id="o6"></div></div>
+</div></div></section>
+
+<section id="code"><div class="wrap">
+<h2>Code explorer</h2>
+<p class="sub">The complete <code>FA_final.py</code>. Choose a part on the left to jump to its lines and read what it does.</p>
+<div class="codebox"><div class="clist" id="clist"></div>
+<div class="cview"><div class="cnote" id="cnote"></div><pre id="src"></pre></div></div>
+</div></section>
+
+<section id="params"><div class="wrap">
+<h2>Parameters</h2>
+<p class="sub">The constants of the algorithm and the reason for each choice.</p>
+<div class="card"><div class="scroll" style="max-height:none"><table>
+<tr><th>Constant</th><th>Value</th><th>Meaning and reasoning</th></tr>
+<tr><td>R<sub>c</sub>, R<sub>s</sub></td><td>4.0, 4.0</td><td>Radio and sensing range, about 40 % of the arena width.</td></tr>
+<tr><td>Δ (STEP)</td><td>0.45</td><td>Largest move per generation; the arena is crossed in about 22 generations.</td></tr>
+<tr><td>α (ALPHA)</td><td>0.25</td><td>Jitter of ±0.125 per axis.</td></tr>
+<tr><td>β<sub>0</sub> and factor ½</td><td>1.0, 0.5</td><td>Attractiveness at zero distance is 0.5.</td></tr>
+<tr><td>FA_PULL_CAP</td><td>1.0</td><td>Swarm pull cannot exceed the drone's own pursuit (1.35 or 1.05).</td></tr>
+<tr><td>ENERGY_WEIGHT, 0.15</td><td>0.5, 0.15</td><td>Energy term of the brightness (at most 1.06 across the arena).</td></tr>
+<tr><td>SEP_DIST, SEP_GAIN</td><td>0.8, 0.9</td><td>Drones keep about a body length apart.</td></tr>
+<tr><td>COVER_DIST, COVER_GAIN</td><td>2.2, 1.6</td><td>Free drones stay clear of covered survivors.</td></tr>
+<tr><td>DRONE_MARGIN, SURV_MARGIN</td><td>0.28, 0.35</td><td>Safety gaps around hazards.</td></tr>
+<tr><td>ESC_WINDOW, ESC_PROGRESS, ESC_STEPS</td><td>20, 0.6, 14</td><td>Stagnation escape.</td></tr>
+<tr><td>FOUND_DIST</td><td>0.55</td><td>Marking distance.</td></tr>
+<tr><td>CHARGE_RATE</td><td>6.0</td><td>Recharge per generation; 250 units in about 40 generations.</td></tr>
+<tr><td>PHASE_SWITCH</td><td>60</td><td>Drifters become eligible at generation 60 at the latest.</td></tr>
+<tr><td>ZONE_GROW</td><td>12</td><td>A late hazard grows to full size in 12 generations.</td></tr>
+<tr><td>STOP_MIN, STOP_MAX</td><td>50, 95</td><td>Drifters stop in this range of generations.</td></tr>
+</table></div></div></div></section>
+
+<section id="results"><div class="wrap">
+<h2>Verified results</h2>
+<p class="sub">All numbers were produced by running the delivered code (100 seeds per point unless stated). The default scenario is 16 drones, 8 survivors (4 drifting), R<sub>c</sub> = 4, battery 250, a fixed and a moving hazard.</p>
+<div class="grid g2">
+<div class="card chart"><h4>Mission time against the number of survivors</h4><canvas id="r1"></canvas><p class="note">Last survivor marked and fleet docked. 16 drones (24 above 12 survivors), half of the survivors drifting.</p></div>
+<div class="card chart"><h4>Mean generations to mark a static survivor, by fleet size</h4><canvas id="r2"></canvas><p class="note">12 static survivors, no hazards, 50 seeds.</p></div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+<div class="card"><h4>Battery relay, 400-generation mission (50 seeds)</h4><table>
+<tr><th>Battery</th><th>Relay</th><th>Completed</th><th>Lost</th><th>Recalls</th></tr>
+<tr><td>250</td><td>on</td><td>50 / 50</td><td>0</td><td>8.0</td></tr><tr><td>250</td><td>off</td><td>0 / 50</td><td>8</td><td>0</td></tr>
+<tr><td>120</td><td>on</td><td>50 / 50</td><td>0</td><td>23.2</td></tr><tr><td>120</td><td>off</td><td>0 / 50</td><td>8</td><td>0</td></tr></table></div>
+<div class="card"><h4>Environment (100 seeds)</h4><table>
+<tr><th>Environment</th><th>Completed</th><th>Last mark</th><th>Docked</th></tr>
+<tr><td>Static</td><td>100 / 100</td><td>87.6</td><td>109.1</td></tr><tr><td>Fixed hazard</td><td>100 / 100</td><td>88.2</td><td>112.2</td></tr>
+<tr><td>Fixed + moving</td><td>100 / 100</td><td>89.7</td><td>117.4</td></tr><tr><td>All + radio drop</td><td>100 / 100</td><td>89.0</td><td>118.1</td></tr></table></div>
+</div>
+<div class="card" style="margin-top:14px"><h4>What does and does not matter</h4>
+<p><b>Matters:</b> target assignment, the pursuit force, the battery relay and the sensing range (R<sub>s</sub> 4.0 → 1.5 raises the slowest discovery from 33 to about 170 generations).</p>
+<p><b>Little measurable effect in the tested scenarios:</b> the radio range (1 to 10), the Firefly pull (β<sub>0</sub> = 1 against 0) and the energy weight (0 to 1.5). The report states this plainly.</p></div>
+</div></section>
+
+<section id="run"><div class="wrap">
+<h2>Run the Python program</h2>
+<div class="grid g2">
+<div class="card"><h4>Interactive window</h4><pre class="mono" style="background:var(--code);padding:10px;border-radius:8px;overflow:auto">python FA_final.py</pre><p>Needs Python 3 with Tkinter. No other package is required.</p></div>
+<div class="card"><h4>Headless run</h4><pre class="mono" style="background:var(--code);padding:10px;border-radius:8px;overflow:auto">import FA_final as F
+s = F.Simulation(n_drones=16, n_surv=8,
+                 n_dyn=4, seed=7)
+while not s.done and s.gen &lt; 2000:
+    s.step()
+print(s.gen, s.marked_count())</pre></div>
+</div></div></section>
+
+<footer><div class="wrap">Group 15 · Computational Thinking · Amrita Vishwa Vidyapeetham. This page is self-contained: no network access is used. The simulator is a port of <code>FA_final.py</code> and reproduces its runs.</div></footer>
+
+<script>window.__CR=(function(){
+// Correctly-rounded exp / sin / cos / atan2 using BigInt fixed point (200 fractional bits).
+// Used so the JavaScript engine reproduces CPython (glibc libm) results bit for bit in practice.
+const S=200n, ONE=1n<<S;
+const f64=new Float64Array(1), u64=new BigUint64Array(f64.buffer);
+function toFix(x){ // exact double -> fixed
+  if(x===0)return 0n;f64[0]=x;const b=u64[0];const sign=(b>>63n)?-1n:1n;const e=Number((b>>52n)&0x7ffn);let m=b&0xfffffffffffffn;
+  let ex;if(e===0){ex=-1074;}else{m|=1n<<52n;ex=e-1075;}
+  const sh=BigInt(ex)+S;let v=sh>=0n?m<<sh:m>>(-sh);return sign*v;}
+function fromFix(v,extraShift=0){ // fixed (value = v/2^S * 2^extraShift) -> nearest double (ties to even)
+  if(v===0n)return 0;const neg=v<0n;if(neg)v=-v;const bl=v.toString(2).length;let sh=bl-53; // keep 53 bits
+  let m,ex=extraShift-Number(S);
+  if(sh>0){const r=v&((1n<<BigInt(sh))-1n);m=v>>BigInt(sh);const half=1n<<BigInt(sh-1);if(r>half||(r===half&&(m&1n)))m+=1n;ex+=sh;}else{m=v<<BigInt(-sh);ex+=sh;}
+  let out=Number(m)*Math.pow(2,ex>=-1000?ex:ex+0);if(ex<-1000)out=Number(m)*Math.pow(2,-1000)*Math.pow(2,ex+1000);return neg?-out:out;}
+const mul=(a,b)=>(a*b)>>S, div=(a,b)=>(a<<S)/b;
+function sqrtFix(a){if(a<=0n)return 0n;const n=a<<S;let y=BigInt(Math.max(1,Math.floor(Math.sqrt(Number(a>>(S-60n))))))<<170n;
+  for(let i=0;i<12;i++){y=(y+n/y)>>1n;}return y;}
+// constants
+function atanhInv(n){ // atanh(1/n)
+  let term=div(ONE,BigInt(n)<<S),sum=0n,x2=BigInt(n*n),k=1n,t=term;while(t!==0n){sum+=t/k;t=t/x2;k+=2n;}return sum;}
+const LN2=2n*atanhInv(3);
+function atanInv(n){let t=ONE/BigInt(n),sum=0n,k=1n,sgn=1n,x2=BigInt(n*n);while(t!==0n){sum+=sgn*(t/k);t=t/x2;k+=2n;sgn=-sgn;}return sum;}
+const PI=4n*(4n*atanInv(5)-atanInv(239));
+function expFix(r){ // |r| small
+  let term=ONE,sum=ONE,k=1n;while(term!==0n){term=mul(term,r)/k;sum+=term;k+=1n;if(k>200n)break;}return sum;}
+function exp(x){
+  if(x===0)return 1;if(!isFinite(x))return x>0?Infinity:0;if(x>709.78)return Infinity;if(x<-745.2)return 0;
+  const X=toFix(x);const k=(X*2n+LN2)/(2n*LN2);const kk=X>=0n?k:-((-X*2n+LN2)/(2n*LN2));
+  const r=X-kk*LN2;const E=expFix(r);return fromFix(E,Number(kk));}
+function sincos(x){ // returns [sin,cos] as fixed
+  const X=toFix(x);const TWO=2n*PI;let r=X%TWO;if(r>PI)r-=TWO;if(r<-PI)r+=TWO;
+  const h=PI/2n;let q=0;let y=r;
+  // reduce to [-pi/4,pi/4] with quadrant
+  if(y>PI/4n){y-=h;q=1;}else if(y<-PI/4n){y+=h;q=-1;}
+  let sn=y,sc=ONE,tn=y,tc=ONE;const y2=mul(y,y);
+  for(let k=1n;k<80n;k++){tc=-mul(tc,y2)/((2n*k-1n)*(2n*k));tn=-mul(tn,y2)/((2n*k)*(2n*k+1n));sc+=tc;sn+=tn;if(tc===0n&&tn===0n)break;}
+  if(q===0)return [sn,sc];if(q===1)return [sc,-sn];return [-sc,sn];}
+function sin(x){if(x===0)return x;return fromFix(sincos(x)[0]);}
+function cos(x){return fromFix(sincos(x)[1]);}
+function atanFix(t){ // any t fixed
+  let neg=false;if(t<0n){neg=true;t=-t;}let inv=false;if(t>ONE){t=div(ONE,t);inv=true;}
+  let halv=0;while(t>(ONE>>3n)){t=div(t,ONE+sqrtFix(ONE+mul(t,t)));halv++;}
+  let term=t,sum=t,k=3n;const t2=mul(t,t);let sg=-1n;term=t;while(true){term=mul(term,t2);if(term===0n)break;sum+=sg*(term/k);k+=2n;sg=-sg;}
+  sum<<=BigInt(halv);if(inv)sum=PI/2n-sum;return neg?-sum:sum;}
+function atan2(y,x){
+  if(Number.isNaN(x)||Number.isNaN(y))return NaN;
+  if(y===0){if(x>0||Object.is(x,0))return y;return Object.is(y,0)?Math.PI:-Math.PI;}
+  if(x===0)return y>0?Math.PI/2:-Math.PI/2;
+  const Y=toFix(y),X=toFix(x);let a=atanFix(div(Y<0n?-Y:Y,X<0n?-X:X));
+  // quotient may be tiny/huge: fixed point ok for our ranges
+  let r=x>0?a:PI-a;if(y<0)r=-r;return fromFix(r);}
+return {exp,sin,cos,atan2};
+
+})();</script>
+<script>// ===== Exact JavaScript port of the Simulation engine in FA_final.py (lines 1-344) =====
+// Includes a bit-exact port of Python's random.Random (Mersenne Twister MT19937).
+const CR=(typeof module!=="undefined")?require("./mathcr.js"):window.__CR;
+const AREA=10.0, BASE=[0.0,0.0];
+const ALPHA=0.25, BETA0=1.0, STEP=0.45;
+const FOUND_DIST=0.55, SENSE_RANGE=4.0, ENERGY_WEIGHT_DEFAULT=0.5, PHASE_SWITCH=60;
+const SPEED_MIN=0.04, SPEED_MAX=0.20, STOP_MIN=50, STOP_MAX=95;
+const DRONE_MARGIN=0.28, SURV_MARGIN=0.35;
+const MAX_SURV_TRAIL=5, MAX_DRONE_TRAIL=4;
+const ESC_WINDOW=20, ESC_PROGRESS=0.6, ESC_STEPS=14;
+const SEP_DIST=0.8, SEP_GAIN=0.9, COVER_DIST=2.2, COVER_GAIN=1.6;
+const ZONE_GROW=12, CHARGE_RATE=6.0, FA_PULL_CAP=1.0;
+const P={ENERGY_WEIGHT:ENERGY_WEIGHT_DEFAULT};
+
+class PyRandom{
+  constructor(seed){this.mt=new Uint32Array(624);this.idx=624;this._seed(Math.abs(seed));}
+  _initGen(s){const mt=this.mt;mt[0]=s>>>0;for(let i=1;i<624;i++){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=(Math.imul(1812433253,p)+i)>>>0;}this.idx=624;}
+  _seed(n){let key=[];if(n===0)key=[0];else{while(n>0){key.push(n%4294967296);n=Math.floor(n/4294967296);}}
+    this._initGen(19650218);const mt=this.mt;let i=1,j=0;const N=624;let k=Math.max(N,key.length);
+    for(;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=((mt[i]^Math.imul(p,1664525))+key[j]+j)>>>0;i++;j++;if(i>=N){mt[0]=mt[N-1];i=1;}if(j>=key.length)j=0;}
+    for(k=N-1;k;k--){const p=mt[i-1]^(mt[i-1]>>>30);mt[i]=((mt[i]^Math.imul(p,1566083941))-i)>>>0;i++;if(i>=N){mt[0]=mt[N-1];i=1;}}
+    mt[0]=0x80000000;this.idx=624;}
+  _next32(){const mt=this.mt;if(this.idx>=624){let kk=0,y;for(;kk<624-397;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk+397]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      for(;kk<623;kk++){y=(mt[kk]&0x80000000)|(mt[kk+1]&0x7fffffff);mt[kk]=mt[kk+(397-624)]^(y>>>1)^((y&1)?0x9908b0df:0);}
+      y=(mt[623]&0x80000000)|(mt[0]&0x7fffffff);mt[623]=mt[396]^(y>>>1)^((y&1)?0x9908b0df:0);this.idx=0;}
+    let y2=mt[this.idx++];y2^=y2>>>11;y2^=(y2<<7)&0x9d2c5680;y2^=(y2<<15)&0xefc60000;y2^=y2>>>18;return y2>>>0;}
+  random(){const a=this._next32()>>>5,b=this._next32()>>>6;return (a*67108864+b)/9007199254740992;}
+  getrandbits(k){return this._next32()>>>(32-k);}
+  randint(a,b){const n=b-a+1;const k=32-Math.clz32(n);let r=this.getrandbits(k);while(r>=n)r=this.getrandbits(k);return a+r;}
+}
+// near-correctly-rounded hypot (double-double), to match CPython's math.hypot
+function twoProd(a,b){const p=a*b;const C=134217729;let t=C*a;const ah=t-(t-a),al=a-ah;t=C*b;const bh=t-(t-b),bl=b-bh;return [p,((ah*bh-p)+ah*bl+al*bh)+al*bl];}
+function hypot(x,y){x=Math.abs(x);y=Math.abs(y);if(x===0)return y;if(y===0)return x;if(!isFinite(x)||!isFinite(y))return Infinity;
+  const [a,ae]=twoProd(x,x),[b,be]=twoProd(y,y);let s=a+b;const bb=s-a;let e=(a-(s-bb))+(b-bb);e+=ae+be;const hi=s+e;const lo=e-(hi-s);
+  let r=Math.sqrt(hi);const [rr,re]=twoProd(r,r);const d=((hi-rr)-re)+lo;return r+d/(2*r);}
+const dist=(ax,ay,bx,by)=>hypot(ax-bx,ay-by);
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const randPt=(r,m=1.5)=>[m+r.random()*(AREA-2*m),m+r.random()*(AREA-2*m)];
+function projectOutside(x,y,zones,margin){for(let it=0;it<3;it++){for(const z of zones){const d=dist(x,y,z.x,z.y),safe=z.r+margin;if(d<safe){if(d>0.001){const k=safe/d;const nx=z.x+(x-z.x)*k,ny=z.y+(y-z.y)*k;x=nx;y=ny;}else{x=z.x+safe;y=z.y;}}}}return [x,y];}
+function zone(x,y,r,vx=0,vy=0,frm=0){return {x,y,prev_x:x,prev_y:y,r:frm?0.0:r,rf:r,vx,vy,from:frm};}
+const sq=x=>x*x;
+const sumf=a=>{let s=0;for(const v of a)s+=v;return s;};   // sequential, like Python sum()
+
+class Simulation{
+  constructor(o={}){
+    const {n_surv=8,n_dyn=4,n_drones=16,comm=4.0,battery=250,fixed_zone=true,moving_zone=true,new_zone=false,comm_drop=false,manual_stop=false,seed=7}=o;
+    this.seed=seed;this.rng=new PyRandom(seed);const r=this.rng;
+    this.n_dyn=Math.min(n_dyn,n_surv);this.comm=comm;this.comm_drop=comm_drop;this.manual_stop=manual_stop;
+    this.gen=0;this.done=false;this.rtb=false;this.all_parked=false;this.static_pending=true;this.assign=new Map();
+    this.obs=[];
+    if(fixed_zone)this.obs.push(zone(3.5+r.random()*3.5,5.5+r.random()*2.5,1.0+r.random()*0.3));
+    if(moving_zone){const ang=r.random()*2*Math.PI,spd=0.025+r.random()*0.015;
+      this.obs.push(zone(4.5+r.random()*4.0,2.5+r.random()*3.5,0.9+r.random()*0.25,spd*CR.cos(ang),spd*CR.sin(ang)));}
+    if(new_zone)this.obs.push(zone(2.5+r.random()*4.5,3.0+r.random()*3.5,0.85+r.random()*0.2,0,0,50));
+    this.survs=[];const n_static=n_surv-this.n_dyn;
+    for(let i=0;i<n_surv;i++){let x,y;
+      for(let t=0;t<300;t++){x=1.0+r.random()*(AREA-2.0);y=1.0+r.random()*(AREA-2.0);
+        if(dist(x,y,BASE[0],BASE[1])>2.5&&this.obs.every(o=>dist(x,y,o.x,o.y)>o.rf+1.2))break;}
+      const dyn=i>=n_static;
+      // evaluation order of the Python dict literal: speed, heading, stop_gen
+      const speed=dyn?SPEED_MIN+r.random()*(SPEED_MAX-SPEED_MIN):0.0;
+      const heading=r.random()*2*Math.PI;const stop_gen=r.randint(STOP_MIN,STOP_MAX);
+      this.survs.push({id:i+1,x,y,prev_x:x,prev_y:y,dyn,moving:dyn,speed,heading,stop_gen,marked:false,mark_pos:null,followers:0,trail:[],coord_log:[[0,x,y]]});}
+    const n_active=battery?Math.max(1,Math.ceil(n_drones/2)):n_drones;
+    this.drones=[];
+    for(let i=0;i<n_drones;i++){const act=i<n_active;
+      const sx=act?(0.2+r.random()*1.0):BASE[0];const sy=act?(0.2+r.random()*1.0):BASE[1];
+      const [wx,wy]=randPt(r);
+      this.drones.push({id:i+1,x:sx,y:sy,prev_x:sx,prev_y:sy,wx,wy,battery:battery?battery:Infinity,alive:true,status:act?"active":"standby",parked:!act,trail:[],stuck_cnt:0,hist:[],esc:0,esc_dir:1.0});}
+    this.cap=battery;this.swaps=0;this.n_target=n_active;this.events=[];
+  }
+  in_zone(x,y){return this.obs.some(o=>this.gen>=o.from&&dist(x,y,o.x,o.y)<o.r);}
+  active_zones(){return this.obs.filter(o=>this.gen>=o.from);}
+  footprints(){return this.obs.map(o=>Object.assign({},o,{r:o.rf}));}
+  _update_zones(){
+    for(const o of this.obs){o.prev_x=o.x;o.prev_y=o.y;
+      if(o.from>0&&this.gen>=o.from)o.r=o.rf*Math.min(1.0,(this.gen-o.from+1)/ZONE_GROW);
+      if(this.gen<o.from||(o.vx===0&&o.vy===0))continue;
+      const lo=o.r+0.6,hi=AREA-o.r-0.6;
+      if((o.x+o.vx<lo&&o.vx<0)||(o.x+o.vx>hi&&o.vx>0))o.vx=-o.vx;
+      if((o.y+o.vy<lo&&o.vy<0)||(o.y+o.vy>hi&&o.vy>0))o.vy=-o.vy;
+      const keep=[[BASE,o.r+2.5]].concat(this.survs.filter(s=>!s.moving).map(s=>[[s.x,s.y],o.r+SURV_MARGIN+0.45]));
+      const blocker=(vx,vy)=>{for(const [c,m] of keep){const dn=dist(o.x+vx,o.y+vy,c[0],c[1]);if(dn<m&&dn<dist(o.x,o.y,c[0],c[1]))return c;}return null;};
+      const c=blocker(o.vx,o.vy);
+      if(c){const kd=Math.max(dist(o.x,o.y,c[0],c[1]),0.001);const nx=(o.x-c[0])/kd,ny=(o.y-c[1])/kd;
+        const dot=o.vx*nx+o.vy*ny,sp=hypot(o.vx,o.vy);const tx=o.vx-dot*nx,ty=o.vy-dot*ny;const tn=hypot(tx,ty);
+        if(tn>1e-9){o.vx=tx/tn*sp;o.vy=ty/tn*sp;}else{o.vx=-o.vx;o.vy=-o.vy;}
+        if(blocker(o.vx,o.vy)){o.vx=-o.vx;o.vy=-o.vy;}}
+      if(!blocker(o.vx,o.vy)){o.x+=o.vx;o.y+=o.vy;}
+    }
+    const az=this.active_zones();
+    for(const s of this.survs){if(s.moving){const p=projectOutside(s.x,s.y,this.footprints(),SURV_MARGIN);s.x=p[0];s.y=p[1];}}
+    for(const d of this.drones){const [nx,ny]=projectOutside(d.x,d.y,az,DRONE_MARGIN);
+      if(nx!==d.x||ny!==d.y){d.x=nx;d.y=ny;d.prev_x=nx;d.prev_y=ny;}}
+  }
+  _safe_drone_step(d,tx,ty){
+    let fx=tx,fy=ty;const zones=this.active_zones();
+    const near=(edge)=>{let best=null,bv=Infinity;for(const z of zones){const v=dist(d.x,d.y,z.x,z.y)-(edge?z.r:0);if(v<bv){bv=v;best=z;}}return best;};
+    const hist=d.hist;hist.push([d.x,d.y,hypot(tx,ty)>0.25]);while(hist.length>ESC_WINDOW)hist.shift();
+    if(zones.length&&d.esc===0&&hist.length===ESC_WINDOW&&hist.every(h=>h[2])){
+      let mx=-Infinity;for(const h of hist)mx=Math.max(mx,dist(hist[0][0],hist[0][1],h[0],h[1]));
+      if(mx<ESC_PROGRESS){const cl=near(true);const kd=Math.max(0.001,dist(d.x,d.y,cl.x,cl.y));
+        const cross=((d.x-cl.x)/kd)*ty-((d.y-cl.y)/kd)*tx;d.esc=ESC_STEPS;d.esc_dir=cross<0?-1.0:1.0;hist.length=0;}}
+    if(d.esc>0&&zones.length){
+      d.esc-=1;const cl=near(true);const kd=Math.max(0.001,dist(d.x,d.y,cl.x,cl.y));
+      const rx=(d.x-cl.x)/kd,ry=(d.y-cl.y)/kd;
+      let mx=(-ry*d.esc_dir+rx*0.35)*STEP,my=(rx*d.esc_dir+ry*0.35)*STEP;
+      if(zones.filter(z=>dist(d.x,d.y,z.x,z.y)<z.r+DRONE_MARGIN+0.35).length>=2){
+        const ax=sumf(zones.map(z=>(d.x-z.x)/sq(Math.max(dist(d.x,d.y,z.x,z.y),0.001))));
+        const ay=sumf(zones.map(z=>(d.y-z.y)/sq(Math.max(dist(d.x,d.y,z.x,z.y),0.001))));
+        mx=ax/Math.max(hypot(ax,ay),1e-9)*STEP;my=ay/Math.max(hypot(ax,ay),1e-9)*STEP;}
+      let nx=clamp(d.x+mx,0.2,AREA-0.2),ny=clamp(d.y+my,0.2,AREA-0.2);
+      [nx,ny]=projectOutside(nx,ny,zones,DRONE_MARGIN);
+      if(dist(d.x,d.y,nx,ny)<0.04)d.esc_dir=-d.esc_dir;
+      return [nx,ny];}
+    for(const o of zones){const dd=dist(d.x,d.y,o.x,o.y),r_danger=o.r+DRONE_MARGIN+1.35;
+      if(0.001<dd&&dd<r_danger){const rx=(d.x-o.x)/dd,ry=(d.y-o.y)/dd;
+        let rep=sq((r_danger-dd)/(r_danger-o.r))*3.6;let turn=(rx*ty-ry*tx<0)?-1.0:1.0;
+        if(d.stuck_cnt>8){turn=-turn;rep=rep*1.3;}
+        fx+=rx*rep-ry*turn*rep*1.25;fy+=ry*rep+rx*turn*rep*1.25;}}
+    const n=hypot(fx,fy);
+    if(n>STEP){fx=fx/n*STEP;fy=fy/n*STEP;}else if(n<0.001)return [d.x,d.y];
+    let nx=clamp(d.x+fx,0.2,AREA-0.2),ny=clamp(d.y+fy,0.2,AREA-0.2);
+    [nx,ny]=projectOutside(nx,ny,zones,DRONE_MARGIN);
+    if(dist(d.x,d.y,nx,ny)<0.04){d.stuck_cnt+=1;
+      if(d.stuck_cnt>10&&zones.length){const cl=near(false);const kd=Math.max(0.001,dist(d.x,d.y,cl.x,cl.y));
+        nx=clamp(nx+((d.x-cl.x)/kd)*STEP*0.8,0.2,AREA-0.2);ny=clamp(ny+((d.y-cl.y)/kd)*STEP*0.8,0.2,AREA-0.2);
+        [nx,ny]=projectOutside(nx,ny,zones,DRONE_MARGIN);d.stuck_cnt=0;}}
+    else d.stuck_cnt=Math.max(0,d.stuck_cnt-1);
+    return [nx,ny];
+  }
+  _move(d,pos){d.battery-=dist(d.x,d.y,pos[0],pos[1])*1.5;d.x=pos[0];d.y=pos[1];if(d.battery<=0)d.alive=false;}
+  _fly_home(d){const bd=Math.max(dist(d.x,d.y,BASE[0],BASE[1]),0.01);
+    if(bd<0.40){d.status="parked";d.parked=true;d.x=BASE[0];d.y=BASE[1];d.trail=[];return;}
+    this._move(d,this._safe_drone_step(d,(BASE[0]-d.x)/bd*STEP,(BASE[1]-d.y)/bd*STEP));}
+  _log(s){s.coord_log.push([this.gen,s.x,s.y]);}
+  toggle_stop(sid){const s=this.survs[sid-1];if(s&&s.dyn&&!s.marked){s.moving=!s.moving;if(s.moving)s.stop_gen=Math.max(s.stop_gen,this.gen+STOP_MIN);else{s.trail=[];this._log(s);}}}
+  stop_all(){for(const s of this.survs){if(s.dyn&&!s.marked&&s.moving){s.moving=false;s.trail=[];this._log(s);}}}
+  resume_all(){for(const s of this.survs){if(s.dyn&&!s.marked){s.moving=true;s.stop_gen=Math.max(s.stop_gen,this.gen+STOP_MIN);}}}
+  _move_survivors(){const r=this.rng,gen=this.gen;
+    for(const s of this.survs){
+      if(s.moving&&!this.manual_stop&&gen>=s.stop_gen){s.moving=false;this._log(s);}
+      if(!s.moving)continue;
+      s.heading+=(r.random()-0.5)*0.6;
+      let nx=s.x+s.speed*CR.cos(s.heading),ny=s.y+s.speed*CR.sin(s.heading);
+      if(nx<0.25||nx>AREA-0.25)s.heading=Math.PI-s.heading;
+      if(ny<0.25||ny>AREA-0.25)s.heading=-s.heading;
+      const fp=this.footprints();
+      for(const o of fp){const safe_r=o.r+SURV_MARGIN;
+        if(dist(nx,ny,o.x,o.y)<safe_r){const norm=CR.atan2(ny-o.y,nx-o.x);
+          s.heading=norm+(r.random()-0.5)*0.4;nx=o.x+safe_r*CR.cos(norm);ny=o.y+safe_r*CR.sin(norm);}}
+      [nx,ny]=projectOutside(nx,ny,fp,SURV_MARGIN);
+      s.x=clamp(nx,0.25,AREA-0.25);s.y=clamp(ny,0.25,AREA-0.25);this._log(s);}}
+  _relay(unmarked,crowd){const r=this.rng,reserve=16.0+2.0*this.active_zones().length;
+    for(const d of this.drones){if(d.status==="parked"&&d.alive&&this.cap){d.battery=Math.min(this.cap,d.battery+CHARGE_RATE);if(d.battery>=this.cap)d.status="standby";}}
+    for(const d of this.drones){if(d.status==="active"&&d.alive&&d.battery<2.0*Math.max(dist(d.x,d.y,BASE[0],BASE[1]),0.01)+reserve){d.status="returning";this.events.push([this.gen,`Drone ${d.id} low battery, returning`]);}}
+    let n_act=this.drones.filter(d=>d.alive&&d.status==="active").length;
+    for(const stb of this.drones.filter(o=>o.status==="standby"&&o.alive)){
+      if(n_act>=this.n_target)break;
+      stb.status="active";stb.parked=false;n_act++;this.swaps++;this.events.push([this.gen,`Drone ${stb.id} launched as relief`]);
+      if(unmarked.length){let t=null,bk=null;for(const s of unmarked){const k=[crowd[s.id-1],dist(s.x,s.y,BASE[0],BASE[1])];
+          if(bk===null||k[0]<bk[0]||(k[0]===bk[0]&&k[1]<bk[1])){bk=k;t=s;}}
+        stb.wx=clamp(t.x+(r.random()-0.5)*1.5,1.0,AREA-1.0);stb.wy=clamp(t.y+(r.random()-0.5)*1.5,1.0,AREA-1.0);}
+      else{[stb.wx,stb.wy]=randPt(r);}}}
+  step(){
+    if(this.done)return;
+    const r=this.rng,survs=this.survs,drones=this.drones,gen=this.gen;
+    for(const s of survs){s.prev_x=s.x;s.prev_y=s.y;s.trail=(s.dyn&&s.moving)?s.trail.concat([[s.prev_x,s.prev_y]]).slice(-MAX_SURV_TRAIL):[];}
+    for(const d of drones){d.prev_x=d.x;d.prev_y=d.y;d.trail=(d.alive&&(d.status==="active"||d.status==="returning"))?d.trail.concat([[d.prev_x,d.prev_y]]).slice(-MAX_DRONE_TRAIL):[];}
+    if(!this.rtb&&survs.every(s=>s.marked)){this.rtb=true;this.events.push([gen,"All survivors marked, swarm returning to base"]);}
+    if(this.rtb){for(const d of drones){if(d.alive&&!d.parked&&d.status!=="standby")this._fly_home(d);}
+      this._update_zones();this.gen+=1;
+      if(drones.every(d=>d.parked||!d.alive)){this.all_parked=this.done=true;this.events.push([this.gen,"Mission complete: all drones docked"]);}return;}
+    this._move_survivors();this._update_zones();
+    const act=drones.filter(d=>d.alive&&d.status==="active");
+    const unmarked=survs.filter(s=>!s.marked);
+    const guard=Math.max(1,Math.min(3,Math.floor(act.length/Math.max(1,unmarked.length))));
+    this.static_pending=survs.some(s=>!s.marked&&!s.moving);
+    const chase=!this.static_pending||gen>=PHASE_SWITCH;
+    const comm=Math.max(1.0,(this.comm_drop&&gen>=60)?this.comm*0.4:this.comm);
+    const gamma=Math.log(2)/(comm*comm);
+    this.comm_now=comm;this.gamma=gamma;
+    this.assign=this._assign_targets(act,survs,chase,comm,guard);const assign=this.assign;
+    const crowd=new Array(survs.length).fill(0);for(const k of assign.values())crowd[k]+=1;
+    this._relay(unmarked,crowd);
+    const light={};this.light=light;
+    for(const d of drones){
+      if(!d.alive||d.status!=="active"||d.esc>0){light[d.id]=-1e9;continue;}
+      const k=assign.get(d.id);
+      let best=(k!==undefined)?100.0/(1.0+dist(d.x,d.y,survs[k].x,survs[k].y)):0.0;
+      best-=P.ENERGY_WEIGHT*0.15*dist(d.x,d.y,BASE[0],BASE[1]);
+      light[d.id]=this.in_zone(d.x,d.y)?best-500.0:best;}
+    for(const d of drones){
+      if(!d.alive||d.status==="standby"||d.parked)continue;
+      if(d.status==="returning"){this._fly_home(d);continue;}
+      const k=assign.get(d.id);let tx=0.0,ty=0.0;
+      for(const o of act){
+        if(o.id===d.id||k===undefined||assign.get(o.id)!==k||light[o.id]<=light[d.id])continue;
+        const rr=dist(d.x,d.y,o.x,o.y);
+        if(0<rr&&rr<=comm){const beta=0.5*BETA0*CR.exp(-gamma*rr*rr);tx+=beta*(o.x-d.x);ty+=beta*(o.y-d.y);}}
+      const fm=hypot(tx,ty);if(fm>FA_PULL_CAP){tx=tx/fm*FA_PULL_CAP;ty=ty/fm*FA_PULL_CAP;}
+      for(const o of act){const rr=dist(d.x,d.y,o.x,o.y);
+        if(o.id!==d.id&&0<rr&&rr<SEP_DIST){tx+=(d.x-o.x)/rr*SEP_GAIN*(SEP_DIST-rr)/SEP_DIST;ty+=(d.y-o.y)/rr*SEP_GAIN*(SEP_DIST-rr)/SEP_DIST;}}
+      if(k!==undefined){const sv=survs[k];const sd=Math.max(dist(d.x,d.y,sv.x,sv.y),0.01);const pull=sv.moving?1.05:1.35;
+        tx+=(sv.x-d.x)/sd*pull;ty+=(sv.y-d.y)/sd*pull;}
+      else{
+        for(let j=0;j<survs.length;j++){const sv=survs[j];const rr=Math.max(dist(d.x,d.y,sv.x,sv.y),0.01);
+          if(crowd[j]>0&&!sv.marked&&rr<COVER_DIST){tx+=(d.x-sv.x)/rr*COVER_GAIN*(COVER_DIST-rr)/COVER_DIST;ty+=(d.y-sv.y)/rr*COVER_GAIN*(COVER_DIST-rr)/COVER_DIST;}}
+        if(dist(d.x,d.y,d.wx,d.wy)<1.0){const cands=[];for(let i=0;i<4;i++)cands.push(randPt(r));
+          let bestc=null,bv=-Infinity;for(const c of cands){let mn=Infinity,any=false;for(const o of act){if(o.id!==d.id){any=true;mn=Math.min(mn,dist(c[0],c[1],o.x,o.y));}}
+            const v=any?mn:9;if(v>bv){bv=v;bestc=c;}}
+          d.wx=bestc[0];d.wy=bestc[1];}
+        const wd=Math.max(dist(d.x,d.y,d.wx,d.wy),0.01);tx+=(d.wx-d.x)/wd*0.75;ty+=(d.wy-d.y)/wd*0.75;}
+      tx+=ALPHA*(r.random()-0.5);ty+=ALPHA*(r.random()-0.5);
+      d.last_force=[tx,ty];
+      this._move(d,this._safe_drone_step(d,tx,ty));}
+    for(const s of survs){
+      s.followers=s.moving?act.filter(d=>dist(d.x,d.y,s.x,s.y)<1.5).length:0;
+      if(!s.marked&&!s.moving&&act.some(d=>dist(d.x,d.y,s.x,s.y)<FOUND_DIST)){
+        s.marked=true;s.mark_pos=[Math.round(s.x*100)/100,Math.round(s.y*100)/100];s.coord_log.push([gen,s.mark_pos[0],s.mark_pos[1]]);
+        this.events.push([gen,`Survivor S${s.id} marked at (${s.mark_pos[0].toFixed(2)}, ${s.mark_pos[1].toFixed(2)})`]);}}
+    this.gen+=1;
+  }
+  _assign_targets(act,survs,chase,comm,quota_max){
+    const elig=[];survs.forEach((sv,k)=>{if(!sv.marked&&(chase||!sv.moving))elig.push(k);});
+    if(!elig.length||!act.length)return new Map();
+    const known=[];  // [v,did,k] in insertion order
+    for(const d of act){const mates=act.filter(o=>dist(d.x,d.y,o.x,o.y)<=comm);
+      for(const k of elig){const sv=survs[k];let mn=Infinity;for(const o of mates)mn=Math.min(mn,dist(o.x,o.y,sv.x,sv.y));
+        if(mn<SENSE_RANGE)known.push([dist(d.x,d.y,sv.x,sv.y),d.id,k]);}}
+    const assign=new Map(),load={};for(const k of elig)load[k]=0;
+    const sorted=known.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]||a[2]-b[2]);
+    for(let rnd=0;rnd<quota_max;rnd++){
+      const cand=sorted.filter(([v,did,k])=>!assign.has(did)&&load[k]===rnd);
+      for(const [v,did,k] of cand){if(!assign.has(did)&&load[k]===rnd){assign.set(did,k);load[k]+=1;}}}
+    return assign;}
+  marked_count(){return this.survs.filter(s=>s.marked).length;}
+  fleet_stats(){const c=(st,alive=false)=>this.drones.filter(d=>d.status===st&&(d.alive||!alive)).length;return [c("active",true),c("standby"),c("returning",true),c("parked")];}
+  phase_text(){if(this.all_parked)return "Mission complete: swarm recovered at base";if(this.rtb)return "All targets marked: swarm returning to base";
+    if(this.static_pending&&this.gen<PHASE_SWITCH)return "Phase 1: searching for static survivors";
+    if(this.survs.some(s=>s.moving))return "Phase 2: following drifting survivors";return "Drift stabilised: locking final coordinates";}
+}
+if(typeof module!=="undefined")module.exports={Simulation,PyRandom,hypot,P};
+</script>
+<script>const SRC="\"\"\"EO-CC-HFA: energy-optimized, communication-constrained hybrid Firefly swarm SAR (Tkinter). Static survivors are\nmarked first, drifting ones are followed until they stop; every drone owns one target; hazards never move a marked one.\"\"\"\nimport math, random, time\nimport tkinter as tk\nfrom tkinter import ttk\n\nAREA, BASE = 10.0, (0.0, 0.0)\nALPHA, BETA0, STEP = 0.25, 1.0, 0.45\nFOUND_DIST, SENSE_RANGE, ENERGY_WEIGHT, PHASE_SWITCH = 0.55, 4.0, 0.5, 60\nSPEED_MIN, SPEED_MAX, STOP_MIN, STOP_MAX = 0.04, 0.20, 50, 95\nDRONE_MARGIN, SURV_MARGIN = 0.28, 0.35\nMAX_SURV_TRAIL, MAX_DRONE_TRAIL = 5, 4\nESC_WINDOW, ESC_PROGRESS, ESC_STEPS = 20, 0.6, 14   # stagnation escape: window, max wander radius, escape length\nSEP_DIST, SEP_GAIN, COVER_DIST, COVER_GAIN = 0.8, 0.9, 2.2, 1.6\nZONE_GROW = 12                                       # steps for a late hazard to reach full size\nCHARGE_RATE = 6.0                                    # battery units a docked drone regains per step\nFA_PULL_CAP = 1.0                                    # max combined swarm pull (a big cluster can't outvote the sensor)\n\nC_BG, C_PANEL, C_BORDER, C_GRID, C_CARD = \"#F1F5F9\", \"#FFFFFF\", \"#CBD5E1\", \"#E2E8F0\", \"#F8FAFC\"\nC_TEXT, C_MUTED, C_PRIMARY = \"#0F172A\", \"#64748B\", \"#0284C7\"\nC_BLUE, C_AMBER, C_GREEN, C_RED = \"#2563EB\", \"#D97706\", \"#16A34A\", \"#DC2626\"\n\ndef dist(ax, ay, bx, by): return math.hypot(ax - bx, ay - by)\ndef lerp(a, b, t): return a + (b - a) * t\ndef clamp(v, lo, hi): return max(lo, min(hi, v))\ndef rand_pt(r, m=1.5): return m + r.random() * (AREA - 2 * m), m + r.random() * (AREA - 2 * m)\n\ndef project_outside_hazards(x, y, zones, margin):\n    \"\"\"Hard boundary: (x, y) is pushed out of every hazard circle.\"\"\"\n    for _ in range(3):\n        for z in zones:\n            d, safe = dist(x, y, z[\"x\"], z[\"y\"]), z[\"r\"] + margin\n            if d < safe:\n                if d > 0.001: k = safe / d; x, y = z[\"x\"] + (x - z[\"x\"]) * k, z[\"y\"] + (y - z[\"y\"]) * k\n                else: x, y = z[\"x\"] + safe, z[\"y\"]\n    return x, y\n\ndef zone(x, y, r, vx=0.0, vy=0.0, frm=0):\n    return {\"x\": x, \"y\": y, \"prev_x\": x, \"prev_y\": y, \"r\": 0.0 if frm else r, \"rf\": r, \"vx\": vx, \"vy\": vy, \"from\": frm}\n\n# ============================== SIMULATION ENGINE ==============================\nclass Simulation:\n    def __init__(self, n_surv=8, n_dyn=4, n_drones=16, comm=4.0, battery=250, fixed_zone=True, moving_zone=True,\n                 new_zone=False, comm_drop=False, manual_stop=False, seed=7):\n        self.seed, self.rng = seed, random.Random(seed)\n        r = self.rng\n        self.n_dyn, self.comm, self.comm_drop, self.manual_stop = min(n_dyn, n_surv), comm, comm_drop, manual_stop\n        self.gen, self.done, self.rtb, self.all_parked, self.static_pending, self.assign = 0, False, False, False, True, {}\n\n        self.obs = []\n        if fixed_zone: self.obs.append(zone(3.5 + r.random() * 3.5, 5.5 + r.random() * 2.5, 1.0 + r.random() * 0.3))\n        if moving_zone:\n            ang, spd = r.random() * 2 * math.pi, 0.025 + r.random() * 0.015\n            self.obs.append(zone(4.5 + r.random() * 4.0, 2.5 + r.random() * 3.5, 0.9 + r.random() * 0.25,\n                                 spd * math.cos(ang), spd * math.sin(ang)))\n        if new_zone: self.obs.append(zone(2.5 + r.random() * 4.5, 3.0 + r.random() * 3.5, 0.85 + r.random() * 0.2, frm=50))\n\n        self.survs, n_static = [], n_surv - self.n_dyn\n        for i in range(n_surv):\n            for _ in range(300):\n                x, y = 1.0 + r.random() * (AREA - 2.0), 1.0 + r.random() * (AREA - 2.0)\n                if dist(x, y, *BASE) > 2.5 and all(dist(x, y, o[\"x\"], o[\"y\"]) > o[\"rf\"] + 1.2 for o in self.obs): break\n            dyn = i >= n_static\n            self.survs.append({\"id\": i + 1, \"x\": x, \"y\": y, \"prev_x\": x, \"prev_y\": y, \"dyn\": dyn, \"moving\": dyn,\n                               \"speed\": SPEED_MIN + r.random() * (SPEED_MAX - SPEED_MIN) if dyn else 0.0,\n                               \"heading\": r.random() * 2 * math.pi, \"stop_gen\": r.randint(STOP_MIN, STOP_MAX),\n                               \"marked\": False, \"mark_pos\": None, \"followers\": 0, \"trail\": [],\n                               \"coord_log\": [(0, round(x, 2), round(y, 2))]})\n\n        n_active = max(1, math.ceil(n_drones / 2)) if battery else n_drones      # 50% deployed, rest on standby\n        self.drones = []\n        for i in range(n_drones):\n            act = i < n_active\n            sx = (0.2 + r.random() * 1.0) if act else BASE[0]\n            sy = (0.2 + r.random() * 1.0) if act else BASE[1]\n            wx, wy = rand_pt(r)\n            self.drones.append({\"id\": i + 1, \"x\": sx, \"y\": sy, \"prev_x\": sx, \"prev_y\": sy, \"wx\": wx, \"wy\": wy,\n                                \"battery\": float(battery) if battery else float(\"inf\"), \"alive\": True,\n                                \"status\": \"active\" if act else \"standby\", \"parked\": not act, \"trail\": [],\n                                \"stuck_cnt\": 0, \"hist\": [], \"esc\": 0, \"esc_dir\": 1.0})\n        self.cap, self.swaps, self.n_target = battery, 0, n_active\n\n    def in_zone(self, x, y): return any(self.gen >= o[\"from\"] and dist(x, y, o[\"x\"], o[\"y\"]) < o[\"r\"] for o in self.obs)\n    def active_zones(self): return [o for o in self.obs if self.gen >= o[\"from\"]]\n    def footprints(self): return [dict(o, r=o[\"rf\"]) for o in self.obs]      # final size, even for a late zone not yet active\n\n    def _update_zones(self):\n        for o in self.obs:\n            o[\"prev_x\"], o[\"prev_y\"] = o[\"x\"], o[\"y\"]\n            if self.gen >= o[\"from\"] > 0: o[\"r\"] = o[\"rf\"] * min(1.0, (self.gen - o[\"from\"] + 1) / ZONE_GROW)\n            if self.gen < o[\"from\"] or (o[\"vx\"] == 0 and o[\"vy\"] == 0): continue\n            lo, hi = o[\"r\"] + 0.6, AREA - o[\"r\"] - 0.6\n            if (o[\"x\"] + o[\"vx\"] < lo and o[\"vx\"] < 0) or (o[\"x\"] + o[\"vx\"] > hi and o[\"vx\"] > 0): o[\"vx\"] = -o[\"vx\"]\n            if (o[\"y\"] + o[\"vy\"] < lo and o[\"vy\"] < 0) or (o[\"y\"] + o[\"vy\"] > hi and o[\"vy\"] > 0): o[\"vy\"] = -o[\"vy\"]\n            keep = [(BASE, o[\"r\"] + 2.5)] + [((s[\"x\"], s[\"y\"]), o[\"r\"] + SURV_MARGIN + 0.45) for s in self.survs if not s[\"moving\"]]\n\n            def blocker(vx, vy):                  # centre this move would close in on (base / standing or marked survivor)\n                return next((c for c, m in keep if dist(o[\"x\"] + vx, o[\"y\"] + vy, *c) < m and\n                             dist(o[\"x\"] + vx, o[\"y\"] + vy, *c) < dist(o[\"x\"], o[\"y\"], *c)), None)\n            c = blocker(o[\"vx\"], o[\"vy\"])\n            if c:                                 # slide around it (drop the inward velocity); reverse only if that is blocked too\n                kd = max(dist(o[\"x\"], o[\"y\"], *c), 0.001); nx, ny = (o[\"x\"] - c[0]) / kd, (o[\"y\"] - c[1]) / kd\n                dot, sp = o[\"vx\"] * nx + o[\"vy\"] * ny, math.hypot(o[\"vx\"], o[\"vy\"])\n                tx, ty = o[\"vx\"] - dot * nx, o[\"vy\"] - dot * ny; tn = math.hypot(tx, ty)\n                o[\"vx\"], o[\"vy\"] = (tx / tn * sp, ty / tn * sp) if tn > 1e-9 else (-o[\"vx\"], -o[\"vy\"])\n                if blocker(o[\"vx\"], o[\"vy\"]): o[\"vx\"], o[\"vy\"] = -o[\"vx\"], -o[\"vy\"]\n            if not blocker(o[\"vx\"], o[\"vy\"]): o[\"x\"] += o[\"vx\"]; o[\"y\"] += o[\"vy\"]     # boxed in -> wait, never jitter\n        az = self.active_zones()\n        for s in self.survs:\n            if s[\"moving\"]: s[\"x\"], s[\"y\"] = project_outside_hazards(s[\"x\"], s[\"y\"], self.footprints(), SURV_MARGIN)\n        for d in self.drones:\n            nx, ny = project_outside_hazards(d[\"x\"], d[\"y\"], az, DRONE_MARGIN)\n            if (nx, ny) != (d[\"x\"], d[\"y\"]): d[\"x\"], d[\"y\"], d[\"prev_x\"], d[\"prev_y\"] = nx, ny, nx, ny\n\n    def _safe_drone_step(self, d, tx, ty):\n        \"\"\"Potential-field step with goal-directed deflection and a stagnation escape.\"\"\"\n        fx, fy, zones = tx, ty, self.active_zones()\n        near = lambda edge: min(zones, key=lambda z: dist(d[\"x\"], d[\"y\"], z[\"x\"], z[\"y\"]) - (z[\"r\"] if edge else 0))\n        hist = d[\"hist\"]\n        hist.append((d[\"x\"], d[\"y\"], math.hypot(tx, ty) > 0.25)); del hist[:-ESC_WINDOW]\n        if zones and d[\"esc\"] == 0 and len(hist) == ESC_WINDOW and all(h[2] for h in hist) \\\n                and max(dist(hist[0][0], hist[0][1], h[0], h[1]) for h in hist) < ESC_PROGRESS:\n            cl = near(True)                                   # trapped: slide around the nearest hazard edge\n            kd = max(0.001, dist(d[\"x\"], d[\"y\"], cl[\"x\"], cl[\"y\"]))\n            cross = ((d[\"x\"] - cl[\"x\"]) / kd) * ty - ((d[\"y\"] - cl[\"y\"]) / kd) * tx\n            d[\"esc\"], d[\"esc_dir\"] = ESC_STEPS, (-1.0 if cross < 0 else 1.0)\n            hist.clear()\n        if d[\"esc\"] > 0 and zones:\n            d[\"esc\"] -= 1\n            cl = near(True)\n            kd = max(0.001, dist(d[\"x\"], d[\"y\"], cl[\"x\"], cl[\"y\"]))\n            rx, ry = (d[\"x\"] - cl[\"x\"]) / kd, (d[\"y\"] - cl[\"y\"]) / kd\n            mx, my = (-ry * d[\"esc_dir\"] + rx * 0.35) * STEP, (rx * d[\"esc_dir\"] + ry * 0.35) * STEP\n            if sum(dist(d[\"x\"], d[\"y\"], z[\"x\"], z[\"y\"]) < z[\"r\"] + DRONE_MARGIN + 0.35 for z in zones) >= 2:   # wedged between two hazards: back straight out\n                ax = sum((d[\"x\"] - z[\"x\"]) / max(dist(d[\"x\"], d[\"y\"], z[\"x\"], z[\"y\"]), 0.001) ** 2 for z in zones)\n                ay = sum((d[\"y\"] - z[\"y\"]) / max(dist(d[\"x\"], d[\"y\"], z[\"x\"], z[\"y\"]), 0.001) ** 2 for z in zones)\n                mx, my = ax / max(math.hypot(ax, ay), 1e-9) * STEP, ay / max(math.hypot(ax, ay), 1e-9) * STEP\n            nx, ny = clamp(d[\"x\"] + mx, 0.2, AREA - 0.2), clamp(d[\"y\"] + my, 0.2, AREA - 0.2)\n            nx, ny = project_outside_hazards(nx, ny, zones, DRONE_MARGIN)\n            if dist(d[\"x\"], d[\"y\"], nx, ny) < 0.04: d[\"esc_dir\"] = -d[\"esc_dir\"]     # wall in the way\n            return nx, ny\n        for o in zones:\n            dd, r_danger = dist(d[\"x\"], d[\"y\"], o[\"x\"], o[\"y\"]), o[\"r\"] + DRONE_MARGIN + 1.35\n            if 0.001 < dd < r_danger:\n                rx, ry = (d[\"x\"] - o[\"x\"]) / dd, (d[\"y\"] - o[\"y\"]) / dd\n                rep = ((r_danger - dd) / (r_danger - o[\"r\"])) ** 2 * 3.6\n                turn = -1.0 if rx * ty - ry * tx < 0 else 1.0\n                if d[\"stuck_cnt\"] > 8: turn, rep = -turn, rep * 1.3\n                fx += rx * rep - ry * turn * rep * 1.25\n                fy += ry * rep + rx * turn * rep * 1.25\n        n = math.hypot(fx, fy)\n        if n > STEP: fx, fy = fx / n * STEP, fy / n * STEP\n        elif n < 0.001: return d[\"x\"], d[\"y\"]\n        nx, ny = clamp(d[\"x\"] + fx, 0.2, AREA - 0.2), clamp(d[\"y\"] + fy, 0.2, AREA - 0.2)\n        nx, ny = project_outside_hazards(nx, ny, zones, DRONE_MARGIN)\n        if dist(d[\"x\"], d[\"y\"], nx, ny) < 0.04:\n            d[\"stuck_cnt\"] += 1\n            if d[\"stuck_cnt\"] > 10 and zones:\n                cl = near(False)\n                kd = max(0.001, dist(d[\"x\"], d[\"y\"], cl[\"x\"], cl[\"y\"]))\n                nx = clamp(nx + ((d[\"x\"] - cl[\"x\"]) / kd) * STEP * 0.8, 0.2, AREA - 0.2)\n                ny = clamp(ny + ((d[\"y\"] - cl[\"y\"]) / kd) * STEP * 0.8, 0.2, AREA - 0.2)\n                nx, ny = project_outside_hazards(nx, ny, zones, DRONE_MARGIN)\n                d[\"stuck_cnt\"] = 0\n        else: d[\"stuck_cnt\"] = max(0, d[\"stuck_cnt\"] - 1)\n        return nx, ny\n    def _move(self, d, pos):\n        d[\"battery\"] -= dist(d[\"x\"], d[\"y\"], *pos) * 1.5\n        d[\"x\"], d[\"y\"] = pos\n        if d[\"battery\"] <= 0: d[\"alive\"] = False\n    def _fly_home(self, d):\n        bd = max(dist(d[\"x\"], d[\"y\"], *BASE), 0.01)\n        if bd < 0.40:\n            d.update(status=\"parked\", parked=True, x=BASE[0], y=BASE[1], trail=[]); return\n        self._move(d, self._safe_drone_step(d, (BASE[0] - d[\"x\"]) / bd * STEP, (BASE[1] - d[\"y\"]) / bd * STEP))\n\n    def _log(self, s): s[\"coord_log\"].append((self.gen, round(s[\"x\"], 2), round(s[\"y\"], 2)))\n    def toggle_stop(self, sid):\n        s = self.survs[sid - 1]\n        if s[\"dyn\"] and not s[\"marked\"]:\n            s[\"moving\"] = not s[\"moving\"]\n            if s[\"moving\"]: s[\"stop_gen\"] = max(s[\"stop_gen\"], self.gen + STOP_MIN)    # resumed: don't re-halt at once\n            else: s[\"trail\"] = []; self._log(s)\n\n    def stop_all(self):\n        for s in self.survs:\n            if s[\"dyn\"] and not s[\"marked\"] and s[\"moving\"]: s[\"moving\"], s[\"trail\"] = False, []; self._log(s)\n\n    def resume_all(self):\n        for s in self.survs:\n            if s[\"dyn\"] and not s[\"marked\"]: s[\"moving\"], s[\"stop_gen\"] = True, max(s[\"stop_gen\"], self.gen + STOP_MIN)\n\n    def _move_survivors(self):\n        r, gen = self.rng, self.gen\n        for s in self.survs:\n            if s[\"moving\"] and not self.manual_stop and gen >= s[\"stop_gen\"]: s[\"moving\"] = False; self._log(s)\n            if not s[\"moving\"]: continue\n            s[\"heading\"] += (r.random() - 0.5) * 0.6\n            nx, ny = s[\"x\"] + s[\"speed\"] * math.cos(s[\"heading\"]), s[\"y\"] + s[\"speed\"] * math.sin(s[\"heading\"])\n            if nx < 0.25 or nx > AREA - 0.25: s[\"heading\"] = math.pi - s[\"heading\"]\n            if ny < 0.25 or ny > AREA - 0.25: s[\"heading\"] = -s[\"heading\"]\n            fp = self.footprints()\n            for o in fp:\n                safe_r = o[\"r\"] + SURV_MARGIN\n                if dist(nx, ny, o[\"x\"], o[\"y\"]) < safe_r:\n                    norm = math.atan2(ny - o[\"y\"], nx - o[\"x\"])\n                    s[\"heading\"] = norm + (r.random() - 0.5) * 0.4\n                    nx, ny = o[\"x\"] + safe_r * math.cos(norm), o[\"y\"] + safe_r * math.sin(norm)\n            nx, ny = project_outside_hazards(nx, ny, fp, SURV_MARGIN)\n            s[\"x\"], s[\"y\"] = clamp(nx, 0.25, AREA - 0.25), clamp(ny, 0.25, AREA - 0.25)\n            self._log(s)\n\n    def _relay(self, unmarked, crowd):\n        \"\"\"Low battery -> return to base and recharge; a fully charged standby drone replaces it. Repeats until all are marked.\"\"\"\n        r, reserve = self.rng, 16.0 + 2.0 * len(self.active_zones())\n        for d in self.drones:                                 # docked drones recharge, then rejoin the standby pool\n            if d[\"status\"] == \"parked\" and d[\"alive\"] and self.cap:\n                d[\"battery\"] = min(self.cap, d[\"battery\"] + CHARGE_RATE)\n                if d[\"battery\"] >= self.cap: d[\"status\"] = \"standby\"\n        for d in self.drones:\n            if d[\"status\"] == \"active\" and d[\"alive\"] and d[\"battery\"] < 2.0 * max(dist(d[\"x\"], d[\"y\"], *BASE), 0.01) + reserve:\n                d[\"status\"] = \"returning\"\n        n_act = sum(1 for d in self.drones if d[\"alive\"] and d[\"status\"] == \"active\")\n        for stb in [o for o in self.drones if o[\"status\"] == \"standby\" and o[\"alive\"]]:      # refill to full strength\n            if n_act >= self.n_target: break\n            stb[\"status\"], stb[\"parked\"] = \"active\", False; n_act += 1; self.swaps += 1\n            if unmarked:                                      # send it where coverage is thinnest\n                t = min(unmarked, key=lambda s: (crowd[s[\"id\"] - 1], dist(s[\"x\"], s[\"y\"], *BASE)))\n                stb[\"wx\"] = clamp(t[\"x\"] + (r.random() - 0.5) * 1.5, 1.0, AREA - 1.0)\n                stb[\"wy\"] = clamp(t[\"y\"] + (r.random() - 0.5) * 1.5, 1.0, AREA - 1.0)\n            else: stb[\"wx\"], stb[\"wy\"] = rand_pt(r)\n\n    def step(self):\n        if self.done: return\n        r, survs, drones, gen = self.rng, self.survs, self.drones, self.gen\n        for s in survs:\n            s[\"prev_x\"], s[\"prev_y\"] = s[\"x\"], s[\"y\"]\n            s[\"trail\"] = (s[\"trail\"] + [(s[\"prev_x\"], s[\"prev_y\"])])[-MAX_SURV_TRAIL:] if s[\"dyn\"] and s[\"moving\"] else []\n        for d in drones:\n            d[\"prev_x\"], d[\"prev_y\"] = d[\"x\"], d[\"y\"]\n            d[\"trail\"] = (d[\"trail\"] + [(d[\"prev_x\"], d[\"prev_y\"])])[-MAX_DRONE_TRAIL:] \\\n                if d[\"alive\"] and d[\"status\"] in (\"active\", \"returning\") else []\n\n        if not self.rtb and all(s[\"marked\"] for s in survs): self.rtb = True      # all located -> go home\n        if self.rtb:\n            for d in drones:\n                if d[\"alive\"] and not d[\"parked\"] and d[\"status\"] != \"standby\": self._fly_home(d)\n            self._update_zones(); self.gen += 1\n            if all(d[\"parked\"] or not d[\"alive\"] for d in drones): self.all_parked = self.done = True\n            return\n\n        self._move_survivors()\n        self._update_zones()\n\n        act = [d for d in drones if d[\"alive\"] and d[\"status\"] == \"active\"]\n        unmarked = [s for s in survs if not s[\"marked\"]]\n        guard = max(1, min(3, len(act) // max(1, len(unmarked))))\n        self.static_pending = any(not s[\"marked\"] and not s[\"moving\"] for s in survs)\n        chase = not self.static_pending or gen >= PHASE_SWITCH\n        comm = max(1.0, self.comm * 0.4 if (self.comm_drop and gen >= 60) else self.comm)\n        gamma = math.log(2) / (comm * comm)\n        self.assign = assign = self._assign_targets(act, survs, chase, comm, guard)\n        crowd = [0] * len(survs)\n        for k in assign.values(): crowd[k] += 1\n        self._relay(unmarked, crowd)\n\n        light = {}                                            # firefly brightness\n        for d in drones:\n            if not d[\"alive\"] or d[\"status\"] != \"active\" or d[\"esc\"] > 0: light[d[\"id\"]] = -1e9; continue\n            k = assign.get(d[\"id\"])\n            best = 100.0 / (1.0 + dist(d[\"x\"], d[\"y\"], survs[k][\"x\"], survs[k][\"y\"])) if k is not None else 0.0\n            best -= ENERGY_WEIGHT * 0.15 * dist(d[\"x\"], d[\"y\"], *BASE)\n            light[d[\"id\"]] = best - 500.0 if self.in_zone(d[\"x\"], d[\"y\"]) else best\n\n        for d in drones:\n            if not d[\"alive\"] or d[\"status\"] == \"standby\" or d[\"parked\"]: continue\n            if d[\"status\"] == \"returning\": self._fly_home(d); continue\n            k, tx, ty = assign.get(d[\"id\"]), 0.0, 0.0\n            for o in act:                                     # attraction: brighter drones on the SAME target, in comm range\n                if o[\"id\"] == d[\"id\"] or k is None or assign.get(o[\"id\"]) != k or light[o[\"id\"]] <= light[d[\"id\"]]: continue\n                rr = dist(d[\"x\"], d[\"y\"], o[\"x\"], o[\"y\"])\n                if 0 < rr <= comm:\n                    beta = 0.5 * BETA0 * math.exp(-gamma * rr * rr)\n                    tx += beta * (o[\"x\"] - d[\"x\"]); ty += beta * (o[\"y\"] - d[\"y\"])\n            fm = math.hypot(tx, ty)\n            if fm > FA_PULL_CAP: tx, ty = tx / fm * FA_PULL_CAP, ty / fm * FA_PULL_CAP\n            for o in act:                                     # separation: drones stay independent\n                rr = dist(d[\"x\"], d[\"y\"], o[\"x\"], o[\"y\"])\n                if o[\"id\"] != d[\"id\"] and 0 < rr < SEP_DIST:\n                    tx += (d[\"x\"] - o[\"x\"]) / rr * SEP_GAIN * (SEP_DIST - rr) / SEP_DIST\n                    ty += (d[\"y\"] - o[\"y\"]) / rr * SEP_GAIN * (SEP_DIST - rr) / SEP_DIST\n            if k is not None:                                 # pursue own target\n                sv = survs[k]; sd = max(dist(d[\"x\"], d[\"y\"], sv[\"x\"], sv[\"y\"]), 0.01)\n                pull = 1.05 if sv[\"moving\"] else 1.35\n                tx += (sv[\"x\"] - d[\"x\"]) / sd * pull; ty += (sv[\"y\"] - d[\"y\"]) / sd * pull\n            else:                                             # no target: keep clear of covered survivors and explore\n                for j, sv in enumerate(survs):\n                    rr = max(dist(d[\"x\"], d[\"y\"], sv[\"x\"], sv[\"y\"]), 0.01)\n                    if crowd[j] > 0 and not sv[\"marked\"] and rr < COVER_DIST:\n                        tx += (d[\"x\"] - sv[\"x\"]) / rr * COVER_GAIN * (COVER_DIST - rr) / COVER_DIST\n                        ty += (d[\"y\"] - sv[\"y\"]) / rr * COVER_GAIN * (COVER_DIST - rr) / COVER_DIST\n                if dist(d[\"x\"], d[\"y\"], d[\"wx\"], d[\"wy\"]) < 1.0:\n                    cands = [rand_pt(r) for _ in range(4)]\n                    d[\"wx\"], d[\"wy\"] = max(cands, key=lambda c: min([dist(c[0], c[1], o[\"x\"], o[\"y\"]) for o in act if o[\"id\"] != d[\"id\"]] or [9]))\n                wd = max(dist(d[\"x\"], d[\"y\"], d[\"wx\"], d[\"wy\"]), 0.01)\n                tx += (d[\"wx\"] - d[\"x\"]) / wd * 0.75; ty += (d[\"wy\"] - d[\"y\"]) / wd * 0.75\n            tx += ALPHA * (r.random() - 0.5); ty += ALPHA * (r.random() - 0.5)\n            self._move(d, self._safe_drone_step(d, tx, ty))\n\n        for s in survs:                                       # geo-tagging: only a standing survivor can be marked\n            s[\"followers\"] = sum(1 for d in act if dist(d[\"x\"], d[\"y\"], s[\"x\"], s[\"y\"]) < 1.5) if s[\"moving\"] else 0\n            if not s[\"marked\"] and not s[\"moving\"] and any(dist(d[\"x\"], d[\"y\"], s[\"x\"], s[\"y\"]) < FOUND_DIST for d in act):\n                s[\"marked\"], s[\"mark_pos\"] = True, (round(s[\"x\"], 2), round(s[\"y\"], 2))\n                s[\"coord_log\"].append((gen, *s[\"mark_pos\"]))\n        self.gen += 1\n\n    def _assign_targets(self, act, survs, chase, comm, quota_max):\n        \"\"\"One target per drone, from what it (or a drone within comm range) senses. Greedy nearest pairing in rounds:\n        round 1 = one drone per survivor, later rounds add guards up to quota_max; surplus drones explore.\"\"\"\n        elig = [k for k, sv in enumerate(survs) if not sv[\"marked\"] and (chase or not sv[\"moving\"])]\n        if not elig or not act: return {}\n        known = {}\n        for d in act:\n            mates = [o for o in act if dist(d[\"x\"], d[\"y\"], o[\"x\"], o[\"y\"]) <= comm]\n            for k in elig:\n                sv = survs[k]\n                if min(dist(o[\"x\"], o[\"y\"], sv[\"x\"], sv[\"y\"]) for o in mates) < SENSE_RANGE:\n                    known[(d[\"id\"], k)] = dist(d[\"x\"], d[\"y\"], sv[\"x\"], sv[\"y\"])\n        assign, load = {}, {k: 0 for k in elig}\n        for rnd in range(quota_max):\n            for v, did, k in sorted((v, did, k) for (did, k), v in known.items() if did not in assign and load[k] == rnd):\n                if did not in assign and load[k] == rnd: assign[did] = k; load[k] += 1\n        return assign\n\n    def marked_count(self): return sum(1 for s in self.survs if s[\"marked\"])\n    def fleet_stats(self):\n        c = lambda st, alive=False: sum(1 for d in self.drones if d[\"status\"] == st and (d[\"alive\"] or not alive))\n        return c(\"active\", True), c(\"standby\"), c(\"returning\", True), c(\"parked\")\n    def phase_text(self):\n        if self.all_parked: return \"MISSION COMPLETE: Swarm recovered at base.\"\n        if self.rtb: return \"ALL TARGETS MARKED: Swarm returning to base (RTB Active)...\"\n        if self.static_pending and self.gen < PHASE_SWITCH: return \"Phase 1: Searching for static survivors...\"\n        if any(s[\"moving\"] for s in self.survs): return \"Phase 2: Recording drift tracks & following survivors...\"\n        return \"Drifting stabilized: locking final coordinates...\"\n\n# ================================== TKINTER GUI ==================================\ndef label(parent, text=\"\", size=8, bold=False, fg=C_MUTED, bg=C_PANEL, mono=False):\n    return tk.Label(parent, text=text, font=(\"Consolas\" if mono else \"Segoe UI\", size, \"bold\" if bold else \"normal\"), fg=fg, bg=bg)\ndef button(parent, text, cmd, bg=C_BG, fg=C_TEXT, size=8, **kw):\n    return tk.Button(parent, text=text, command=cmd, font=(\"Segoe UI\", size, \"bold\"), fg=fg, bg=bg, bd=1, relief=\"flat\", cursor=\"hand2\", **kw)\nclass TacticalRadarApp:\n    def __init__(self, root):\n        self.root = root\n        root.title(\"Tactical Firefly Swarm SAR - EO-CC-HFA\"); root.geometry(\"1380x880\"); root.minsize(1150, 750); root.configure(bg=C_BG)\n        self.running, self.last_step_time, self.step_interval, self.last_telemetry_time = True, time.time(), 0.11, 0\n        self.var_seed, self.var_comm = tk.IntVar(value=7), tk.DoubleVar(value=4.0)\n        self.var_drones, self.var_surv, self.var_dyn = tk.IntVar(value=16), tk.IntVar(value=8), tk.IntVar(value=4)\n        self.var_battery = tk.StringVar(value=\"Standard Pack (250) - 50% Relay\")\n        self.var_fixed, self.var_moving = tk.BooleanVar(value=True), tk.BooleanVar(value=True)\n        self.var_new, self.var_drop, self.var_manual = tk.BooleanVar(), tk.BooleanVar(), tk.BooleanVar()\n        self.sim, self.card_widgets = None, []; self._build_ui(); self.rebuild_sim(); root.after(16, self._loop)\n\n    def _panel(self, parent, **pack):\n        f = tk.Frame(parent, bg=C_PANEL, highlightbackground=C_BORDER, highlightthickness=1); f.pack(**pack); return f\n\n    def _build_ui(self):\n        box = tk.Frame(self.root, bg=C_BG); box.pack(fill=\"both\", expand=True, padx=12, pady=12)\n        hin = tk.Frame(self._panel(box, fill=\"x\", pady=(0, 8)), bg=C_PANEL); hin.pack(fill=\"x\", padx=14, pady=6)\n        left = tk.Frame(hin, bg=C_PANEL); left.pack(side=\"left\")\n        label(left, \"FIREFLY SWARM SAR - HYBRID ALGORITHM\", 11, True, C_TEXT).pack(side=\"left\", padx=(0, 10))\n        self.relay_pill = label(left, \"\", 8, True, C_PRIMARY, C_BG, True)\n        self.relay_pill.config(highlightthickness=1, padx=8, pady=2); self.relay_pill.pack(side=\"left\")\n\n        act = tk.Frame(hin, bg=C_PANEL); act.pack(side=\"right\")\n        self.btn_pause = button(act, \"Pause\", self.toggle_pause, C_PRIMARY, \"#FFF\", 9, padx=12, pady=3)\n        self.btn_pause.pack(side=\"left\", padx=3)\n        for txt, cmd in [(\"Step\", self.do_step), (\"Restart\", self.rebuild_sim), (\"New Seed\", self.do_new_seed)]:\n            button(act, txt, cmd, size=9, padx=10, pady=3).pack(side=\"left\", padx=3)\n\n        hud = self._panel(box, fill=\"x\", pady=(0, 8))\n        hud_in = tk.Frame(hud, bg=C_PANEL); hud_in.pack(fill=\"x\", padx=14, pady=6)\n        self.lbl_phase = label(hud_in, \"\", 9, True, C_TEXT); self.lbl_phase.pack(side=\"left\")\n        self.lbl_metrics = label(hud_in, \"\", 9, True, C_PRIMARY, mono=True); self.lbl_metrics.pack(side=\"right\")\n\n        grid = tk.Frame(box, bg=C_BG); grid.pack(fill=\"both\", expand=True)\n        self.canvas = tk.Canvas(self._panel(grid, side=\"left\", fill=\"both\", expand=True, padx=(0, 8)),\n                                bg=C_PANEL, bd=0, highlightthickness=0, cursor=\"crosshair\")\n        self.canvas.pack(fill=\"both\", expand=True, padx=10, pady=10)\n        self.canvas.bind(\"<Button-1>\", self.on_canvas_click)\n        side = tk.Frame(grid, bg=C_BG, width=390); side.pack(side=\"right\", fill=\"y\"); side.pack_propagate(False)\n\n        c1 = self._mk_card(side, \"FLEET & BATTERY SETUP\")\n        self._add_slider(c1, \"Fleet Size\", self.var_drones, 2, 32, 2)\n        label(c1, \"Battery Budget\").pack(anchor=\"w\")\n        opt = tk.OptionMenu(c1, self.var_battery, \"Standard Pack (250) - 50% Relay\", \"Critical Pack (120) - 50% Relay\",\n                            \"Unlimited Range\", command=lambda _: self.rebuild_sim())\n        opt.config(bg=C_CARD, fg=C_TEXT, bd=1, relief=\"solid\", font=(\"Segoe UI\", 8)); opt.pack(fill=\"x\", pady=2)\n        self._add_slider(c1, \"Total Survivors\", self.var_surv, 1, 25, 1)\n        self.dyn_scale = self._add_slider(c1, \"Drifting Survivors\", self.var_dyn, 0, 25, 1)\n        self._add_slider(c1, \"RF Comm Range\", self.var_comm, 1.0, 10.0, 0.5, True)\n\n        c2 = self._mk_card(side, \"ENVIRONMENT & HAZARDS\")\n        hg = tk.Frame(c2, bg=C_PANEL); hg.pack(fill=\"x\")\n        for i, (txt, var) in enumerate([(\"Fixed No-Fly\", self.var_fixed), (\"Dynamic Hazard\", self.var_moving),\n                                       (\"Zone (Gen 50)\", self.var_new), (\"Comm Drop (Gen 60)\", self.var_drop),\n                                       (\"Manual Hold (Click / Toggle)\", self.var_manual)]):\n            tk.Checkbutton(hg, text=txt, variable=var, font=(\"Segoe UI\", 8), fg=C_TEXT, bg=C_PANEL, activebackground=C_PANEL,\n                           command=self.rebuild_sim).grid(row=i // 2, column=i % 2, columnspan=2 if i == 4 else 1, sticky=\"w\", padx=2)\n\n        c3 = self._mk_card(side, \"TARGET DIRECTORY & LOGS\", expand=True)\n        bb = tk.Frame(c3, bg=C_PANEL); bb.pack(fill=\"x\", pady=(0, 4))\n        button(bb, \"Resume\", lambda: (self.sim.resume_all(), self._update_telemetry(True)), padx=8).pack(side=\"right\", padx=(2, 0))\n        button(bb, \"Stop All\", lambda: (self.sim.stop_all(), self._update_telemetry(True)), padx=8).pack(side=\"right\")\n        # scrollable target list: scrollbar is packed FIRST so it can never be squeezed out of view\n        sb = ttk.Scrollbar(c3, orient=\"vertical\"); sb.pack(side=\"right\", fill=\"y\")\n        self.tgt_cv = tk.Canvas(c3, bg=C_PANEL, bd=0, highlightthickness=0, yscrollcommand=sb.set)\n        self.tgt_cv.pack(side=\"left\", fill=\"both\", expand=True)\n        sb.config(command=self.tgt_cv.yview)\n        self.tgt_box = tk.Frame(self.tgt_cv, bg=C_PANEL)\n        win = self.tgt_cv.create_window((0, 0), window=self.tgt_box, anchor=\"nw\")\n        self.tgt_box.bind(\"<Configure>\", lambda e: self.tgt_cv.configure(scrollregion=self.tgt_cv.bbox(\"all\")))\n        self.tgt_cv.bind(\"<Configure>\", lambda e: self.tgt_cv.itemconfigure(win, width=e.width))\n        for ev in (\"<MouseWheel>\", \"<Button-4>\", \"<Button-5>\"):        # mouse wheel (Windows / Linux)\n            self.root.bind_all(ev, lambda e: self.tgt_cv.yview_scroll(-1 if (e.num == 4 or e.delta > 0) else 1, \"units\"))\n\n    def _mk_card(self, parent, title, expand=False):\n        in_c = tk.Frame(self._panel(parent, fill=\"both\" if expand else \"x\", expand=expand, pady=(0, 8)), bg=C_PANEL)\n        in_c.pack(fill=\"both\" if expand else \"x\", expand=expand, padx=10, pady=8)\n        label(in_c, title, 8, True, C_PRIMARY).pack(anchor=\"w\", pady=(0, 4))\n        return in_c\n\n    def _add_slider(self, parent, text, var, f, t, st, is_float=False):\n        row = tk.Frame(parent, bg=C_PANEL); row.pack(fill=\"x\", pady=2)\n        h = tk.Frame(row, bg=C_PANEL); h.pack(fill=\"x\")\n        label(h, text).pack(side=\"left\")\n        val_l = label(h, \"\", 8, True, C_TEXT, mono=True); val_l.pack(side=\"right\")\n        fmt = lambda v: f\"{v:.1f} km\" if is_float else str(v)\n\n        def chg(v):\n            val = float(v) if is_float else int(float(v))\n            var.set(val); val_l.config(text=fmt(val)); self.rebuild_sim()\n\n        s = tk.Scale(row, from_=f, to=t, resolution=st, orient=\"horizontal\", showvalue=0, bg=C_PANEL, fg=C_PRIMARY,\n                     troughcolor=C_BG, highlightthickness=0, bd=0, command=chg)\n        s.set(var.get()); val_l.config(text=fmt(var.get())); s.pack(fill=\"x\")\n        s.val_label = val_l\n        return s\n\n    def _style_pause(self):\n        self.btn_pause.config(text=\"Pause\" if self.running else \"Play\", bg=C_PRIMARY if self.running else C_BG,\n                              fg=\"#FFF\" if self.running else C_TEXT)\n\n    def toggle_pause(self):\n        self.running = not self.running; self._style_pause(); self.last_step_time = time.time()\n\n    def do_step(self):\n        self.running = False; self._style_pause(); self.sim.step(); self._update_telemetry(True)\n    def do_new_seed(self): self.var_seed.set(random.randint(0, 1000000)); self.rebuild_sim()\n    def _toggle_surv(self, sid): self.sim.toggle_stop(sid); self._update_telemetry(True)\n\n    def rebuild_sim(self):\n        n_surv = self.var_surv.get()\n        n_dyn = min(self.var_dyn.get(), n_surv)\n        self.dyn_scale.config(to=max(1, n_surv))                  # drifting can never exceed survivors\n        if n_dyn != self.var_dyn.get():\n            self.var_dyn.set(n_dyn); self.dyn_scale.set(n_dyn); self.dyn_scale.val_label.config(text=str(n_dyn))\n        seed = self.var_seed.get()\n        bs = self.var_battery.get()\n        batt = 250 if \"250\" in bs else (120 if \"120\" in bs else None)\n        self.sim = Simulation(n_surv=n_surv, n_dyn=n_dyn, n_drones=self.var_drones.get(), comm=self.var_comm.get(), battery=batt,\n                              fixed_zone=self.var_fixed.get(), moving_zone=self.var_moving.get(), new_zone=self.var_new.get(),\n                              comm_drop=self.var_drop.get(), manual_stop=self.var_manual.get(), seed=seed)\n        col = C_PRIMARY if batt else C_GREEN\n        self.relay_pill.config(text=f\"RELAY ACTIVE ({batt} BATT)\" if batt else \"UNLIMITED RANGE\", fg=col, highlightbackground=col)\n        self.last_step_time = time.time(); self._init_target_cards(); self._update_telemetry(True)\n    def _scr(self, x, y):\n        w, h, pad = self.canvas.winfo_width(), self.canvas.winfo_height(), 36\n        return pad + x / AREA * (w - 2 * pad), pad + (AREA - y) / AREA * (h - 2 * pad)\n    def on_canvas_click(self, ev):                               # click a drifting survivor to hold / release it\n        x0, y0 = self._scr(0, 0); x1, y1 = self._scr(AREA, AREA)\n        if x1 <= x0 or y0 <= y1: return\n        ax, ay = (ev.x - x0) / (x1 - x0) * AREA, (y0 - ev.y) / (y0 - y1) * AREA\n        cands = [s for s in self.sim.survs if s[\"dyn\"] and not s[\"marked\"] and dist(s[\"x\"], s[\"y\"], ax, ay) < 0.8]\n        if cands: self._toggle_surv(min(cands, key=lambda s: dist(s[\"x\"], s[\"y\"], ax, ay))[\"id\"])\n    def _init_target_cards(self):\n        for w in self.tgt_box.winfo_children(): w.destroy()\n        self.card_widgets = []\n        for s in self.sim.survs:\n            card = tk.Frame(self.tgt_box, bg=C_CARD, highlightbackground=C_BORDER, highlightthickness=1)\n            card.pack(fill=\"x\", pady=2, padx=2)\n            r1 = tk.Frame(card, bg=C_CARD); r1.pack(fill=\"x\", padx=6, pady=(3, 1))\n            label(r1, f\"S{s['id']}\", 8, True, C_TEXT, C_CARD).pack(side=\"left\")\n            st_lbl = label(r1, \"\", 7, bg=C_CARD); st_lbl.pack(side=\"right\")\n            r2 = tk.Frame(card, bg=C_CARD); r2.pack(fill=\"x\", padx=6, pady=(0, 3))\n            c_lbl = label(r2, \"\", 8, True, bg=C_CARD, mono=True); c_lbl.pack(side=\"left\")\n            btn = button(r2, \"Stop\", (lambda sid=s[\"id\"]: self._toggle_surv(sid)) if s[\"dyn\"] else None, \"#FFF\", size=7, padx=4, pady=0)\n            btn.config(relief=\"solid\")\n            self.card_widgets.append({\"card\": card, \"st\": st_lbl, \"c\": c_lbl, \"btn\": btn, \"pts\": label(r2, \"\", 7, bg=C_CARD)})\n\n    def _update_telemetry(self, force=False):\n        now, sim = time.time(), self.sim\n        if not force and now - self.last_telemetry_time < 0.12: return\n        self.last_telemetry_time = now\n        col = C_GREEN if sim.all_parked else (C_AMBER if sim.rtb else None)\n        self.lbl_phase.config(text=sim.phase_text(), fg=col or C_TEXT)\n        st = sim.fleet_stats()\n        self.lbl_metrics.config(text=f\"GEN {sim.gen} | ACTIVE {st[0]} | STANDBY {st[1]} | RETURNING {st[2]} | SWAPS {sim.swaps} | MARKED {sim.marked_count()}/{len(sim.survs)}\")\n        for s, cw in zip(sim.survs, self.card_widgets):\n            xy = f\"({s['x']:.1f}, {s['y']:.1f})\"\n            if s[\"marked\"]: bd, st_t, st_c, c_t, c_c, b_t = C_GREEN, \"\u2713 Confirmed Lock\", C_GREEN, f\"FINAL: ({s['mark_pos'][0]:.1f}, {s['mark_pos'][1]:.1f})\", C_GREEN, None\n            elif s[\"dyn\"] and s[\"moving\"]: bd, st_t, st_c, c_t, c_c, b_t = C_BORDER, f\"Drifting ({s['followers']} drn)\", C_AMBER, f\"REC: {xy}\", C_PRIMARY, \"Stop\"\n            elif s[\"dyn\"]: bd, st_t, st_c, c_t, c_c, b_t = C_BORDER, \"Halted / Waiting\", C_BLUE, f\"HALT: {xy}\", C_BLUE, \"Resume\"\n            else: bd, st_t, st_c, c_t, c_c, b_t = C_BORDER, \"Static Target\", C_MUTED, f\"STATIC: {xy}\", C_TEXT, None\n            cw[\"card\"].config(highlightbackground=bd); cw[\"st\"].config(text=st_t, fg=st_c); cw[\"c\"].config(text=c_t, fg=c_c)\n            if cw.get(\"bt\") != b_t:\n                cw[\"bt\"] = b_t; cw[\"btn\"].pack_forget(); cw[\"pts\"].pack_forget()\n                if b_t: cw[\"btn\"].config(text=b_t); cw[\"btn\"].pack(side=\"right\", padx=(3, 0)); cw[\"pts\"].pack(side=\"right\")\n            if b_t: cw[\"pts\"].config(text=f\"{len(s['coord_log'])} pts\", fg=C_AMBER if s[\"moving\"] else C_MUTED)\n\n    def _badge(self, x, y, text, fg, bg, bd):\n        cv, pw = self.canvas, len(text) * 5.8 + 10\n        cv.create_rectangle(x - pw / 2, y - 7, x + pw / 2, y + 7, fill=bg, outline=bd)\n        cv.create_text(x, y, text=text, fill=fg, font=(\"Consolas\", 8, \"bold\"))\n\n    def _draw_arena(self, p):\n        cv, sim, scr = self.canvas, self.sim, self._scr\n        cv.delete(\"all\")\n        if cv.winfo_width() < 120 or cv.winfo_height() < 120: return\n        pos = lambda o: (lerp(o[\"prev_x\"], o[\"x\"], p), lerp(o[\"prev_y\"], o[\"y\"], p))\n        for i in range(0, 11, 2):\n            gx, gy0 = scr(i, 0); _, gy1 = scr(i, 10); gx0, gy = scr(0, i); gx1, _ = scr(10, i)\n            cv.create_line(gx, gy0, gx, gy1, fill=C_GRID); cv.create_text(gx, gy0 + 12, text=str(i), fill=C_MUTED, font=(\"Consolas\", 8))\n            cv.create_line(gx0, gy, gx1, gy, fill=C_GRID); cv.create_text(gx0 - 12, gy, text=str(i), fill=C_MUTED, font=(\"Consolas\", 8))\n        scale = scr(AREA, 0)[0] - scr(0, 0)[0]\n        for o in sim.active_zones():\n            sx, sy = scr(*pos(o)); rad = o[\"r\"] * scale / AREA\n            cv.create_oval(sx - rad, sy - rad, sx + rad, sy + rad, fill=\"#FEE2E2\", outline=C_RED, width=1.5, dash=(4, 3))\n            self._badge(sx, sy, \"HAZARD ZONE\", \"#B91C1C\", \"#FEE2E2\", C_RED)\n        bx, by = scr(*BASE); st = sim.fleet_stats()\n        cv.create_oval(bx - 14, by - 14, bx + 14, by + 14, outline=C_PRIMARY, width=1.5)\n        cv.create_rectangle(bx - 5, by - 5, bx + 5, by + 5, fill=\"#1E293B\", outline=\"#1E293B\")\n        self._badge(bx + 64, by - 2, f\"BASE [STB:{st[1]}|DCK:{st[3]}]\", C_TEXT, \"#FFF\", C_BORDER)\n\n        if not sim.rtb:                                           # follower links to drifting survivors\n            for s in sim.survs:\n                if s[\"moving\"] and not s[\"marked\"]:\n                    sx, sy = scr(*pos(s))\n                    for d in sim.drones:\n                        if d[\"alive\"] and d[\"status\"] == \"active\" and dist(d[\"x\"], d[\"y\"], s[\"x\"], s[\"y\"]) < 1.5:\n                            cv.create_line(*scr(*pos(d)), sx, sy, fill=C_AMBER, dash=(3, 3))\n        trails = [(s, \"#FCD34D\", 2) for s in sim.survs if s[\"dyn\"] and s[\"moving\"]] + \\\n                 [(d, \"#FCD34D\" if d[\"status\"] == \"returning\" else \"#93C5FD\", 1.5) for d in sim.drones\n                  if d[\"alive\"] and d[\"status\"] in (\"active\", \"returning\")]\n        for o, col, w in trails:\n            pts = [scr(*q) for q in o[\"trail\"] + [pos(o)]]\n            for a, b in zip(pts, pts[1:]): cv.create_line(*a, *b, fill=col, width=w)\n\n        az = sim.active_zones()\n        for s in sim.survs:\n            cx, cy = project_outside_hazards(*pos(s), az, SURV_MARGIN)\n            sx, sy = scr(cx, cy); tri = (sx, sy - 7, sx - 6, sy + 5, sx + 6, sy + 5)\n            if s[\"marked\"]:\n                cv.create_oval(sx - 10, sy - 10, sx + 10, sy + 10, outline=C_GREEN, width=2)\n                cv.create_rectangle(sx - 4, sy - 4, sx + 4, sy + 4, fill=C_GREEN, outline=C_GREEN)\n                self._badge(sx + 50, sy - 2, f\"\u2713 S{s['id']} FINAL:({s['mark_pos'][0]:.1f}, {s['mark_pos'][1]:.1f})\", C_GREEN, \"#DCFCE7\", C_GREEN)\n            elif s[\"dyn\"]:\n                col, bg, tag = (C_AMBER, \"#FEF3C7\", \"REC\") if s[\"moving\"] else (C_BLUE, \"#DBEAFE\", \"HALT\")\n                cv.create_polygon(*tri, fill=col, outline=\"\")\n                self._badge(sx + 50, sy - 2, f\"S{s['id']} {tag}:({cx:.1f}, {cy:.1f})\", col, bg, col)\n            else:\n                cv.create_rectangle(sx - 5, sy - 5, sx + 5, sy + 5, fill=C_MUTED, outline=C_BORDER)\n                self._badge(sx + 38, sy - 2, f\"S{s['id']} ({cx:.1f}, {cy:.1f})\", C_TEXT, \"#FFF\", C_BORDER)\n        for d in sim.drones:\n            if d[\"status\"] in (\"standby\", \"parked\") or not d[\"alive\"]: continue\n            dx, dy = scr(*project_outside_hazards(*pos(d), az, DRONE_MARGIN))\n            cv.create_oval(dx - 5, dy - 5, dx + 5, dy + 5, fill=C_AMBER if d[\"status\"] == \"returning\" else C_BLUE, outline=\"#FFF\", width=1.5)\n            cv.create_text(dx + 8, dy - 7, text=f\"D{d['id']}\", fill=C_TEXT, font=(\"Consolas\", 7, \"bold\"))\n\n    def _loop(self):\n        now, live = time.time(), self.running and not self.sim.done\n        if live and now - self.last_step_time >= self.step_interval:\n            self.sim.step(); self.last_step_time = now; self._update_telemetry()\n        self._draw_arena(min(1.0, (now - self.last_step_time) / self.step_interval) if live else 1.0)\n        self.root.after(16, self._loop)\ndef main():\n    root = tk.Tk()\n    try:\n        from ctypes import windll\n        windll.shcore.SetProcessDpiAwareness(1)\n    except Exception:\n        pass\n    TacticalRadarApp(root)\n    root.mainloop()\n\nif __name__ == \"__main__\":\n    main()";</script>
+<script>(function(){
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+// theme
+$("theme").onclick=()=>{const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+  const nx=cur==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",nx);try{localStorage.setItem("th",nx)}catch(e){}redrawAll();};
+try{const t=localStorage.getItem("th");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}
+
+// ---------- canvas helpers
+function fit(cv){const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;const w=Math.max(10,Math.round(r.width*dpr)),h=Math.max(10,Math.round(r.height*dpr));if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;}const g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);return [g,r.width,r.height];}
+function plot(cv,o){ // o:{xmin,xmax,ymin,ymax,xl,yl,series:[{pts,color,dash,w}],marks:[{x,y,label}],vlines:[{x,label,color}],hlines}
+  const [g,W,H]=fit(cv);g.clearRect(0,0,W,H);const m={l:46,r:14,t:12,b:34};const pw=W-m.l-m.r,ph=H-m.t-m.b;
+  const X=x=>m.l+(x-o.xmin)/(o.xmax-o.xmin)*pw,Y=y=>m.t+ph-(y-o.ymin)/(o.ymax-o.ymin)*ph;
+  g.font="12px system-ui";g.fillStyle=css("--mute");g.strokeStyle=css("--line");g.lineWidth=1;
+  const nx=(o.xmax-o.xmin)>=12?(o.xmax-o.xmin>=100?5:6):6,ny=5;g.textAlign="center";for(let i=0;i<=nx;i++){const v=o.xmin+(o.xmax-o.xmin)*i/nx;g.beginPath();g.moveTo(X(v),m.t);g.lineTo(X(v),m.t+ph);g.stroke();g.fillText(+v.toFixed((o.xmax-o.xmin)>=12?0:2),X(v),H-m.b+16);}
+  g.textAlign="right";for(let i=0;i<=ny;i++){const v=o.ymin+(o.ymax-o.ymin)*i/ny;g.beginPath();g.moveTo(m.l,Y(v));g.lineTo(m.l+pw,Y(v));g.stroke();g.fillText(+v.toFixed(2),m.l-6,Y(v)+4);}
+  g.textAlign="center";g.fillText(o.xl||"",m.l+pw/2,H-4);g.save();g.translate(12,m.t+ph/2);g.rotate(-Math.PI/2);g.fillText(o.yl||"",0,0);g.restore();
+  for(const v of (o.vlines||[])){g.strokeStyle=v.color||css("--amber");g.setLineDash([5,4]);g.beginPath();g.moveTo(X(v.x),m.t);g.lineTo(X(v.x),m.t+ph);g.stroke();g.setLineDash([]);if(v.label){g.fillStyle=v.color||css("--amber");g.textAlign="left";g.fillText(v.label,X(v.x)+4,m.t+12);}}
+  for(const s of o.series){g.strokeStyle=s.color;g.lineWidth=s.w||2.2;g.setLineDash(s.dash||[]);g.beginPath();s.pts.forEach((p,i)=>{i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1]));});g.stroke();g.setLineDash([]);
+    if(s.dots){g.fillStyle=s.color;for(const p of s.pts){g.beginPath();g.arc(X(p[0]),Y(p[1]),3.5,0,7);g.fill();}}}
+  for(const k of (o.marks||[])){g.fillStyle=k.color||css("--red");g.beginPath();g.arc(X(k.x),Y(k.y),5,0,7);g.fill();g.fillStyle=css("--ink");g.textAlign=k.align||"left";g.fillText(k.label||"",X(k.x)+(k.align==="right"?-9:9),Y(k.y)-8);}
+  if(o.legend){let y=m.t+14;g.textAlign="left";for(const s of o.series){if(!s.name)continue;g.fillStyle=s.color;g.fillRect(m.l+pw-150,y-8,14,3);g.fillStyle=css("--ink");g.fillText(s.name,m.l+pw-130,y-3);y+=16;}}
+}
+
+// ---------- simulator
+let sim,running=true,sel=null,hist=[],lastT=0,acc=0;
+const CFG=()=>({n_drones:+$("nDr").value,n_surv:+$("nSv").value,n_dyn:Math.min(+$("nDy").value,+$("nSv").value),comm:+$("cm").value,battery:+$("bt").value,
+  fixed_zone:$("fz").checked,moving_zone:$("mz").checked,new_zone:$("nz").checked,comm_drop:$("cd").checked,seed:+$("sd").value|0});
+let frozen=false;
+function build(){doneUI=false;acc=0;prog=1;sim=new Simulation(CFG());sim.events=[];hist=[[0,0,0]];sel=null;frozen=false;$("bFreeze").textContent="Freeze drifters";$("log").innerHTML="";logCount=0;ui(true);}
+function stepOnce(){if(sim.done)return;const before=sim.events.length;sim.step();const ns=sim.survs.filter(s=>!s.dyn),nd=sim.survs.filter(s=>s.dyn);
+  hist.push([sim.gen,ns.length?ns.filter(s=>s.marked).length/ns.length:1,nd.length?nd.filter(s=>s.marked).length/nd.length:1]);}
+let logCount=0;
+let lastUI=0,doneUI=false;function ui(force){const nw=performance.now();if(!force&&nw-lastUI<120)return;lastUI=nw;$("kG").textContent=sim.gen;$("kM").textContent=sim.marked_count()+"/"+sim.survs.length;const fs=sim.fleet_stats();$("kA").textContent=fs[0];$("kS").textContent=sim.swaps;
+  $("phase").textContent=sim.phase_text();$("rcnow").textContent=sim.comm_now?`  R_c now ${sim.comm_now.toFixed(1)}, γ = ${sim.gamma.toFixed(4)}`:"";
+  const lg=$("log");while(logCount<sim.events.length){const e=sim.events[logCount++];const d=document.createElement("div");d.textContent=`[${String(e[0]).padStart(3," ")}] ${e[1]}`;lg.appendChild(d);lg.scrollTop=lg.scrollHeight;}
+  let h="<tr><th>ID</th><th>Type</th><th>State</th><th>Position</th><th>Followers</th></tr>";
+  for(const s of sim.survs)h+=`<tr><td>S${s.id}</td><td>${s.dyn?"drifting":"static"}</td><td>${s.marked?"marked":s.moving?"moving":"standing"}</td><td class="mono">${s.marked?"("+s.mark_pos[0].toFixed(2)+", "+s.mark_pos[1].toFixed(2)+")":"("+s.x.toFixed(2)+", "+s.y.toFixed(2)+")"}</td><td>${s.followers}</td></tr>`;
+  $("tSv").innerHTML=h;
+  h="<tr><th>ID</th><th>Status</th><th>Battery</th><th>Target</th><th>I</th></tr>";
+  for(const d of sim.drones){const k=sim.assign.get(d.id);const I=sim.light?sim.light[d.id]:null;h+=`<tr><td>D${d.id}</td><td>${d.alive?d.status:"lost"}</td><td class="mono">${isFinite(d.battery)?Math.max(0,d.battery).toFixed(0):"∞"}</td><td>${k!==undefined?"S"+sim.survs[k].id:"-"}</td><td class="mono">${I!==null&&I>-1e8?I.toFixed(1):"-"}</td></tr>`;}
+  $("tDr").innerHTML=h;progress();inspect();}
+function progress(){plot($("prog"),{xmin:0,xmax:Math.max(130,sim.gen+5),ymin:0,ymax:1,xl:"generation",yl:"share marked",
+  series:[{pts:hist.map(p=>[p[0],p[1]]),color:css("--navy"),name:"static",w:2.4},{pts:hist.map(p=>[p[0],p[2]]),color:css("--amber"),name:"drifting",w:2.4}],legend:true,vlines:[{x:60,label:"phase switch",color:css("--mute")}]});}
+function inspect(){const el=$("insp");if(sel===null){el.textContent="Click a drone on the map to see its brightness, target, battery and the attraction it feels.";return;}
+  const d=sim.drones[sel];const k=sim.assign.get(d.id);let t=`<b>Drone D${d.id}</b>: ${d.alive?d.status:"lost"}, battery ${isFinite(d.battery)?d.battery.toFixed(0):"unlimited"}`;
+  if(d.status==="active"&&d.alive){t+=`<br>Target: ${k!==undefined?"S"+sim.survs[k].id+" (distance "+Math.hypot(d.x-sim.survs[k].x,d.y-sim.survs[k].y).toFixed(2)+")":"none, exploring"}. Brightness I = ${sim.light&&sim.light[d.id]>-1e8?sim.light[d.id].toFixed(1):"-"}`;
+    const att=[];if(k!==undefined&&sim.comm_now){for(const o of sim.drones){if(o.id===d.id||o.status!=="active"||!o.alive||sim.assign.get(o.id)!==k||sim.light[o.id]<=sim.light[d.id])continue;const rr=Math.hypot(d.x-o.x,d.y-o.y);if(rr>0&&rr<=sim.comm_now)att.push(`D${o.id} (r ${rr.toFixed(2)}, β ${(0.5*Math.exp(-sim.gamma*rr*rr)).toFixed(3)})`);}}
+    t+=`<br>Attracted by: ${att.length?att.join(", "):"nobody (no brighter drone on the same target in range)"}`;if(d.esc>0)t+=`<br>Escaping a trap (${d.esc} steps left)`;}
+  el.innerHTML=t;}
+const cv=$("cv");
+let prog=1;const T0=performance.now();
+const lerp=(a,b,t)=>a+(b-a)*t;
+function badge(g,txt,x,y,theme){g.font="600 10px ui-monospace,Consolas,monospace";const w=g.measureText(txt).width+9,h=15;
+  const th={cyan:["rgba(15,23,42,.88)","rgba(0,240,255,.4)","#00F0FF"],green:["rgba(6,78,59,.9)","rgba(16,185,129,.55)","#6EE7B7"],orange:["rgba(69,26,3,.9)","rgba(245,158,11,.55)","#FDE68A"],stat:["rgba(30,41,59,.92)","rgba(56,189,248,.45)","#BAE6FD"],red:["rgba(69,10,10,.9)","rgba(239,68,68,.55)","#FCA5A5"]}[theme||"cyan"];
+  g.fillStyle=th[0];g.beginPath();if(g.roundRect)g.roundRect(x-4,y-11,w,h,4);else g.rect(x-4,y-11,w,h);g.fill();g.strokeStyle=th[1];g.lineWidth=1;g.stroke();g.fillStyle=th[2];g.textAlign="left";g.fillText(txt,x,y);}
+function trail(g,X,Y,cx,cy,tr,rgb,w0){if(!tr||!tr.length)return;const pts=[[cx,cy]].concat(tr.slice().reverse().map(p=>[p[0],p[1]]));g.lineCap="round";
+  for(let i=0;i<pts.length-1;i++){const f=1-i/pts.length;g.strokeStyle=`rgba(${rgb},${Math.pow(f,1.5)*.8})`;g.lineWidth=Math.max(.8,w0*f);g.beginPath();g.moveTo(X(pts[i][0]),Y(pts[i][1]));g.lineTo(X(pts[i+1][0]),Y(pts[i+1][1]));g.stroke();}}
+function draw(){const [g,W,H]=fit(cv);const M=34,sc=(Math.min(W,H)-2*M)/10;const X=x=>M+x*sc,Y=y=>H-M-y*sc;const now=(performance.now()-T0)/1000;
+  const bg=g.createRadialGradient(W*.3,H*.3,10,W*.5,H*.5,W*.8);bg.addColorStop(0,"#0f1a2c");bg.addColorStop(1,"#080d17");g.fillStyle=bg;g.fillRect(0,0,W,H);
+  // grid
+  g.lineWidth=1;g.font="10px ui-monospace,Consolas,monospace";g.textAlign="center";g.textBaseline="middle";
+  for(let i=0;i<=10;i++){g.strokeStyle=i%2?"rgba(40,56,80,.35)":"rgba(56,78,110,.55)";g.beginPath();g.moveTo(X(i),Y(0));g.lineTo(X(i),Y(10));g.stroke();g.beginPath();g.moveTo(X(0),Y(i));g.lineTo(X(10),Y(i));g.stroke();
+    if(i%2===0){g.fillStyle="#64748B";g.fillText(i,X(i),Y(0)+14);g.fillText(i,X(0)-15,Y(i));}}
+  g.textBaseline="alphabetic";
+  const rc=$("rg").checked&&sim.comm_now?sim.comm_now:null;
+  const P=o=>[lerp(o.prev_x,o.x,prog),lerp(o.prev_y,o.y,prog)];
+  // hazards
+  for(const o of sim.obs){if(sim.gen<o.from)continue;const [hx,hy]=P(o);const cx=X(hx),cy=Y(hy),rad=o.r*sc;
+    g.beginPath();g.arc(cx,cy,(o.r+0.28+1.35)*sc,0,7);g.strokeStyle="rgba(239,68,68,.16)";g.setLineDash([2,5]);g.lineWidth=1;g.stroke();g.setLineDash([]);
+    const gr=g.createRadialGradient(cx,cy,rad*.2,cx,cy,rad);gr.addColorStop(0,"rgba(239,68,68,.38)");gr.addColorStop(1,"rgba(239,68,68,.07)");
+    g.fillStyle=gr;g.beginPath();g.arc(cx,cy,rad,0,7);g.fill();g.strokeStyle="rgba(239,68,68,.9)";g.lineWidth=1.4;g.setLineDash([6,4]);g.lineDashOffset=-now*8;g.stroke();g.setLineDash([]);g.lineDashOffset=0;
+    if(o.from&&o.r<o.rf-0.01){g.beginPath();g.arc(cx,cy,o.rf*sc,0,7);g.strokeStyle="rgba(239,68,68,.35)";g.setLineDash([2,4]);g.stroke();g.setLineDash([]);}
+    badge(g,(o.vx||o.vy)?"MOVING HAZARD":o.from?"LATE HAZARD":"NO-FLY ZONE",cx-38,cy+4,"red");}
+  // base pad
+  const bx=X(0),by=Y(0),fs=sim.fleet_stats();
+  for(let k=0;k<2;k++){const ph=((now*.5+k*.5)%1);g.beginPath();g.arc(bx,by,10+ph*26,0,7);g.strokeStyle=`rgba(0,240,255,${.35*(1-ph)})`;g.lineWidth=1.5;g.stroke();}
+  g.fillStyle="#00F0FF";g.fillRect(bx-5,by-5,10,10);badge(g,`BASE (0,0) STB:${fs[1]} DCK:${fs[3]}`,bx+14,by-12,"cyan");
+  // radio links
+  const act=sim.drones.filter(d=>d.alive&&d.status==="active");
+  if(rc){for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){const a=P(act[i]),b=P(act[j]);const dd=Math.hypot(a[0]-b[0],a[1]-b[1]);if(dd<=rc){g.strokeStyle=`rgba(56,189,248,${.30*(1-dd/rc)+.04})`;g.lineWidth=1;g.beginPath();g.moveTo(X(a[0]),Y(a[1]));g.lineTo(X(b[0]),Y(b[1]));g.stroke();}}}
+  // assignment lines
+  for(const d of act){const k=sim.assign.get(d.id);if(k===undefined)continue;const a=P(d),s=sim.survs[k],b=P(s);const isSel=sel!==null&&sim.drones[sel]===d;
+    g.strokeStyle=isSel?"rgba(74,222,128,.95)":"rgba(74,222,128,.16)";g.lineWidth=isSel?1.8:1;g.setLineDash(isSel?[]:[3,4]);g.beginPath();g.moveTo(X(a[0]),Y(a[1]));g.lineTo(X(b[0]),Y(b[1]));g.stroke();g.setLineDash([]);}
+  // drift breadcrumbs
+  for(const s of sim.survs){if(s.dyn&&s.coord_log.length>1){g.fillStyle="rgba(245,158,11,.32)";const st=Math.max(1,Math.floor(s.coord_log.length/40));for(let i=0;i<s.coord_log.length;i+=st)g.fillRect(X(s.coord_log[i][1])-1,Y(s.coord_log[i][2])-1,2,2);}}
+  // survivor trails
+  for(const s of sim.survs){if(s.dyn&&s.moving){const p=P(s);trail(g,X,Y,p[0],p[1],s.trail,"245,158,11",2.4);}}
+  for(const d of sim.drones){if(d.alive&&(d.status==="active"||d.status==="returning")){const p=P(d);trail(g,X,Y,p[0],p[1],d.trail,d.status==="returning"?"245,158,11":"0,240,255",2.2);}}
+  // selected drone ranges
+  const hl=sel!==null?sim.drones[sel]:null;
+  if(hl&&hl.alive&&hl.status==="active"){const p=P(hl);g.setLineDash([5,4]);g.lineWidth=1.2;if(rc){g.strokeStyle="rgba(0,240,255,.6)";g.beginPath();g.arc(X(p[0]),Y(p[1]),rc*sc,0,7);g.stroke();}g.strokeStyle="rgba(245,158,11,.6)";g.beginPath();g.arc(X(p[0]),Y(p[1]),4*sc,0,7);g.stroke();g.setLineDash([]);}
+  // survivors
+  for(const s of sim.survs){const p=P(s),x=X(p[0]),y=Y(p[1]);
+    if(s.marked){const ph=(now*.7+s.id*.31)%1;g.beginPath();g.arc(x,y,9+ph*14,0,7);g.strokeStyle=`rgba(16,185,129,${.5*(1-ph)})`;g.lineWidth=1.5;g.stroke();
+      g.beginPath();g.arc(x,y,10,0,7);g.fillStyle="rgba(16,185,129,.2)";g.fill();g.strokeStyle="#10B981";g.lineWidth=1.8;g.stroke();g.fillStyle="#10B981";g.fillRect(x-3.5,y-3.5,7,7);
+      badge(g,`✓ S${s.id} (${s.mark_pos[0].toFixed(1)}, ${s.mark_pos[1].toFixed(1)})`,x+13,y-3,"green");}
+    else if(s.dyn){g.fillStyle=s.moving?"#F59E0B":"#38BDF8";g.shadowColor=s.moving?"#F59E0B":"#38BDF8";g.shadowBlur=8;g.beginPath();g.moveTo(x,y-7);g.lineTo(x-6.5,y+5);g.lineTo(x+6.5,y+5);g.closePath();g.fill();g.shadowBlur=0;
+      badge(g,`S${s.id} ${s.moving?"REC":"HALT"} (${p[0].toFixed(1)}, ${p[1].toFixed(1)})`+(s.moving?` [${s.coord_log.length}]`:""),x+12,y-3,s.moving?"orange":"stat");}
+    else{g.fillStyle="#94A3B8";g.beginPath();if(g.roundRect)g.roundRect(x-5,y-5,10,10,2);else g.rect(x-5,y-5,10,10);g.fill();g.strokeStyle="#38BDF8";g.lineWidth=1.3;g.stroke();badge(g,`S${s.id} (${p[0].toFixed(1)}, ${p[1].toFixed(1)})`,x+12,y-3,"stat");}}
+  // drones
+  for(const d of sim.drones){if(!d.alive||d.status==="standby"||d.parked)continue;const p=P(d),x=X(p[0]),y=Y(p[1]);const ret=d.status==="returning";const col=ret?"#F59E0B":"#00F0FF";
+    const gl=g.createRadialGradient(x,y,0,x,y,12);gl.addColorStop(0,ret?"rgba(245,158,11,.5)":"rgba(0,240,255,.45)");gl.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gl;g.beginPath();g.arc(x,y,12,0,7);g.fill();
+    if(sim.cap&&isFinite(d.battery)){const fr=Math.max(0,Math.min(1,d.battery/sim.cap));g.beginPath();g.arc(x,y,8,-Math.PI/2,-Math.PI/2+fr*2*Math.PI);g.strokeStyle=fr>.5?"#10B981":fr>.25?"#F59E0B":"#EF4444";g.lineWidth=2;g.stroke();}
+    g.beginPath();g.arc(x,y,4,0,7);g.fillStyle=col;g.fill();g.strokeStyle=ret?"#EF4444":"#0284C7";g.lineWidth=1;g.stroke();
+    if(d.esc>0){const pl=.5+.5*Math.sin(now*10);g.beginPath();g.arc(x,y,12+pl*2,0,7);g.strokeStyle=`rgba(239,68,68,${.5+.4*pl})`;g.lineWidth=2;g.stroke();}
+    if(sel!==null&&sim.drones[sel]===d){g.beginPath();g.arc(x,y,14,0,7);g.strokeStyle="#fff";g.lineWidth=1.8;g.stroke();}
+    g.fillStyle="#94A3B8";g.font="9px ui-monospace,Consolas,monospace";g.textAlign="left";g.fillText("D"+d.id,x+9,y-8);}
+  // HUD
+  g.fillStyle="rgba(148,163,184,.75)";g.font="11px ui-monospace,Consolas,monospace";g.textAlign="left";g.fillText(`GEN ${sim.gen}  ·  R_c ${(sim.comm_now||sim.comm).toFixed(1)}`,M,20);}
+
+cv.addEventListener("click",e=>{const r=cv.getBoundingClientRect(),M=34,sc=(Math.min(r.width,r.height)-2*M)/10;const x=(e.clientX-r.left-M)/sc,y=(r.height-M-(e.clientY-r.top))/sc;let b=null,bd=0.9;
+  sim.drones.forEach((d,i)=>{if(!d.alive||d.status==="standby"||d.parked)return;const dd=Math.hypot(d.x-x,d.y-y);if(dd<bd){bd=dd;b=i;}});
+  if(b===null){let bs=null,sd=0.8;for(const s of sim.survs){if(s.dyn&&!s.marked){const dd=Math.hypot(s.x-x,s.y-y);if(dd<sd){sd=dd;bs=s;}}}if(bs){sim.toggle_stop(bs.id);}}
+  sel=b;ui(true);});
+let fpsN=0,fpsT=performance.now();
+function loop(t){requestAnimationFrame(loop);if(!lastT)lastT=t;const dt=Math.min(250,t-lastT);lastT=t;
+  fpsN++;if(t-fpsT>=600){$("fps").textContent=Math.round(fpsN*1000/(t-fpsT))+" FPS";fpsN=0;fpsT=t;}
+  const gps=+$("sp").value,stepMs=1000/gps;let n=0;
+  if(running&&!sim.done){acc+=dt;while(acc>=stepMs&&n<8){stepOnce();acc-=stepMs;n++;}if(n>=8)acc=0;prog=(n>1||gps>30)?1:Math.min(1,acc/stepMs);if(n)ui();}else{prog=1;acc=0;if(sim.done&&!doneUI){doneUI=true;ui(true);}}
+  draw();}
+$("bPlay").onclick=()=>{running=!running;$("bPlay").textContent=running?"Pause":"Play";};
+$("bStep").onclick=()=>{running=false;$("bPlay").textContent="Play";stepOnce();ui(true);};
+$("bReset").onclick=()=>{build();};$("bSeed").onclick=()=>{$("sd").value=1+Math.floor(Math.random()*99999);build();};
+$("bFreeze").onclick=()=>{frozen=!frozen;if(frozen){sim.manual_stop=true;sim.stop_all();}else{sim.manual_stop=false;sim.resume_all();}$("bFreeze").textContent=frozen?"Resume drifters":"Freeze drifters";ui(true);};
+["nDr","nSv","nDy","cm","bt","sd","fz","mz","nz","cd"].forEach(id=>$(id).addEventListener("change",build));
+$("sp").oninput=()=>{$("spv").textContent=$("sp").value;};$("rg").onchange=draw;
+window.addEventListener("resize",()=>redrawAll());
+
+// ---------- formula lab
+const lab={};
+function labs(){
+  const Rc=+$("s1").value;$("v1").textContent=Rc.toFixed(1);const gm=Math.LN2/(Rc*Rc);const pts=[];for(let r=0;r<=12;r+=0.1)pts.push([r,0.5*Math.exp(-gm*r*r)]);
+  plot($("c1"),{xmin:0,xmax:12,ymin:0,ymax:0.5,xl:"distance r",yl:"β(r), β0 = 1",series:[{pts,color:css("--teal")}],vlines:[{x:Rc,label:"R_c",color:css("--amber")}],marks:[{x:Rc,y:0.25,label:"0.25 at the radio edge"}]});
+  $("o1").textContent=`γ = ln2 / ${Rc.toFixed(1)}² = ${gm.toFixed(4)}   β(0) = 0.500   β(R_c) = ${(0.5*Math.exp(-gm*Rc*Rc)).toFixed(3)}`;
+  const dt=+$("s2").value,db=+$("s2b").value,hz=$("h2").checked;$("v2").textContent=dt.toFixed(1);$("v2b").textContent=db.toFixed(1);
+  const prox=100/(1+dt),en=P.ENERGY_WEIGHT*0.15*db,I=prox-en-(hz?500:0);const p2=[];for(let r=0;r<=12;r+=0.1)p2.push([r,100/(1+r)-en-(hz?500:0)]);
+  plot($("c2"),{xmin:0,xmax:12,ymin:hz?-520:0,ymax:100,xl:"distance to target",yl:"brightness I",series:[{pts:p2,color:css("--navy")}],marks:[{x:dt,y:I,label:"I = "+I.toFixed(1),align:dt>8?"right":"left"}]});
+  $("o2").textContent=`100/(1+${dt.toFixed(1)}) = ${prox.toFixed(2)}   − 0.5·0.15·${db.toFixed(1)} = ${en.toFixed(2)}${hz?"   − 500":""}   →  I = ${I.toFixed(2)}`;
+  const rho=+$("s3").value,dd=+$("s3b").value;$("v3").textContent=rho.toFixed(2);$("v3b").textContent=dd.toFixed(2);const rd=rho+0.28+1.35;const rep=x=>x<rho+0.0001?3.6:x>=rd?0:3.6*Math.pow((rd-x)/(rd-rho),2);
+  const p3=[];for(let x=0.5;x<=4;x+=0.02)p3.push([x,rep(x)]);
+  plot($("c3"),{xmin:0.5,xmax:4,ymin:0,ymax:3.8,xl:"distance from hazard centre",yl:"repulsion strength",series:[{pts:p3,color:css("--red")}],vlines:[{x:rho,label:"hazard edge",color:css("--mute")},{x:rd,label:"danger band",color:css("--amber")}],marks:[{x:dd,y:rep(dd),label:rep(dd).toFixed(2),color:css("--navy")}]});
+  $("o3").textContent=`danger radius = ${rho.toFixed(2)} + 0.28 + 1.35 = ${rd.toFixed(2)}   push at d = ${dd.toFixed(2)}:  ${rep(dd).toFixed(3)}`;
+  const d4=+$("s4").value,E=+$("s4b").value,z=+$("s4c").value;$("v4").textContent=d4.toFixed(1);$("v4b").textContent=E;$("v4c").textContent=z;
+  const th=x=>2*Math.max(x,0.01)+16+2*z,p4=[],p5=[];for(let x=0;x<=14.1;x+=0.1){p4.push([x,th(x)]);p5.push([x,1.5*x]);}
+  plot($("c4"),{xmin:0,xmax:14.1,ymin:0,ymax:70,xl:"distance to base",yl:"battery units",series:[{pts:p4,color:css("--red"),name:"return threshold",dash:[]},{pts:p5,color:css("--teal"),name:"cost of a straight flight home",dash:[5,4]}],legend:true,marks:[{x:d4,y:Math.min(E,70),label:"drone",color:css("--navy")}]});
+  const back=E<th(d4);$("o4").innerHTML=`threshold = 2·${d4.toFixed(1)} + 16 + 2·${z} = ${th(d4).toFixed(1)}   battery ${E}  →  <b>${back?"RETURN to base":"keep flying"}</b>   (straight flight home needs ${(1.5*d4).toFixed(1)})`;
+  const na=+$("s5").value,nu=+$("s5b").value;$("v5").textContent=na;$("v5b").textContent=nu;const q=Math.max(1,Math.min(3,Math.floor(na/Math.max(1,nu))));
+  $("o5").textContent=`q = max(1, min(3, ⌊${na}/${nu}⌋)) = ${q} guard${q>1?"s":""} per survivor`;
+  const f=+$("s6").value;$("v6").textContent=f.toFixed(2);$("o6").textContent=`move length = min(${f.toFixed(2)}, 0.45) = ${Math.min(f,0.45).toFixed(2)}   ${f>0.45?"(limited to the step Δ)":"(below the limit)"}`;
+}
+document.querySelectorAll(".lab input").forEach(i=>i.addEventListener("input",labs));
+
+// ---------- code explorer
+const PARTS=[
+ ["Constants and helpers","1–41","All tunable constants, plus dist, clamp, rand_pt and the hard projection out of hazards (lines 28–36).",1,41],
+ ["Simulation setup","42–86","The constructor builds hazards, survivors and drones from one random generator. With a battery limit only half of the fleet is active.",42,86],
+ ["Hazard update","87–113","Late hazards grow over 12 generations. Moving hazards bounce and slide around the base and standing survivors so that a mark is never lost.",87,113],
+ ["Hazard-safe step","115–166","Stagnation escape (120–141), potential-field repulsion with a swerve (142–150), step limit and projection (151–166).",115,166],
+ ["Energy and docking","167–175","Each move costs 1.5 per unit. A returning drone docks within 0.40 of the base.",167,175],
+ ["Survivor drift","193–211","Persistent random walk, wall bounce, push-out from hazards, stop at the stop generation.",193,211],
+ ["Battery relay","213–231","Recharge, return rule E < 2·d + 16 + 2|Z|, relaunch of standby drones towards the least covered survivor.",213,231],
+ ["step(): one generation","233–315","The main loop in seven stages: move the world, phase and radio range, assignment, relay, brightness, movement, marking.",233,315],
+ ["Phase and radio range","255–264","Guard quota, static-first phase until generation 60, radio drop to 40 %, γ = ln 2 / R_c².",255,264],
+ ["Brightness","267–273","I = 100/(1+d_target) − w_e·0.15·d_base − 500 inside a hazard; −10⁹ for dead, inactive or escaping drones.",267,273],
+ ["Firefly attraction","279–286","Brighter drones on the same target within R_c pull with β = ½ β0 e^(−γr²); the total is capped at 1.0.",279,286],
+ ["Separation, pursuit, exploration","287–307","Separation, pursuit of the target, cover push and waypoint exploration for drones without a target, then jitter.",287,307],
+ ["Marking","310–314","A standing survivor with an active drone within 0.55 is geo-tagged.",310,314],
+ ["Target assignment","317–333","Knowledge through radio mates and greedy nearest pairing in rounds up to the quota.",317,333],
+ ["Interface (Tkinter)","346–596","The graphical interface. It draws the world and passes the user's settings to the engine; it takes no part in any decision.",346,596]];
+const lines=SRC.split("\n");if(lines[lines.length-1]==="")lines.pop();
+const KW=/^(?:import|from|def|class|return|if|elif|else|for|while|in|not|and|or|is|None|True|False|lambda|break|continue|del|pass|with|as|try|except|global)$/;
+function hlLine(s){let out="";const re=/(#.*$)|("""[^"]*"""|"[^"]*"|'[^']*'|f"[^"]*")|([A-Za-z_][A-Za-z_0-9]*)|(\d+\.?\d*(?:e-?\d+)?)|([^A-Za-z_0-9"'#]+)/g;let m,prevDef=false;
+  const esc=t=>t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  while((m=re.exec(s))){if(m[1])out+=`<span class="c">${esc(m[1])}</span>`;else if(m[2])out+=`<span class="s">${esc(m[2])}</span>`;else if(m[3]){if(KW.test(m[3])){out+=`<span class="k">${m[3]}</span>`;prevDef=(m[3]==="def"||m[3]==="class");}else if(prevDef){out+=`<span class="df">${m[3]}</span>`;prevDef=false;}else out+=m[3];}else if(m[4])out+=`<span class="nm">${m[4]}</span>`;else out+=esc(m[5]);}
+  return out;}
+const srcEl=$("src");srcEl.innerHTML=lines.map((l,i)=>`<div id="L${i+1}"><span class="ln">${i+1}</span><span>${hlLine(l)||" "}</span></div>`).join("");
+const cl=$("clist");PARTS.forEach((p,i)=>{const b=document.createElement("button");b.innerHTML=`${p[0]}<small>lines ${p[1]}</small>`;b.onclick=()=>selPart(i);cl.appendChild(b);});
+function selPart(i){const p=PARTS[i];[...cl.children].forEach((b,j)=>b.classList.toggle("on",i===j));$("cnote").innerHTML=`<b>${p[0]}</b> · lines ${p[1]}<br>${p[2]}`;
+  for(let k=1;k<=lines.length;k++){const e=$("L"+k);e.classList.toggle("hl",k>=p[3]&&k<=p[4]);}
+  const t=$("L"+p[3]);srcEl.scrollTop=t.offsetTop-srcEl.offsetTop-6;}
+selPart(7);
+
+// ---------- results charts
+function results(){
+  const S=[2,4,8,12,16,20,25],a=[73.3,83.2,89.7,91.4,92.5,93.8,93.9],b=[101.0,111.8,117.4,118.5,120.3,121.5,120.5];
+  plot($("r1"),{xmin:0,xmax:26,ymin:60,ymax:130,xl:"number of survivors",yl:"generation",series:[{pts:S.map((s,i)=>[s,a[i]]),color:css("--teal"),dots:true,name:"last survivor marked"},{pts:S.map((s,i)=>[s,b[i]]),color:css("--navy"),dots:true,dash:[6,4],name:"fleet fully docked"}],legend:true});
+  const F=[4,8,16,24],v=[17.84,14.96,13.96,13.69];
+  plot($("r2"),{xmin:0,xmax:28,ymin:10,ymax:20,xl:"fleet size (drones)",yl:"generations per static survivor",series:[{pts:F.map((f,i)=>[f,v[i]]),color:css("--teal"),dots:true}],marks:F.map((f,i)=>({x:f,y:v[i],label:v[i].toFixed(1),color:css("--teal")}))});}
+function redrawAll(){if(window.sim||sim){draw();progress();}labs();results();}
+// ---------- start
+build();labs();results();selPart(7);requestAnimationFrame(loop);
+window.addEventListener("load",redrawAll);
+})();
+</script>
+</body></html>
